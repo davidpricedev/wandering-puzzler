@@ -1,7 +1,6 @@
 import * as R from "ramda";
-import { newPlayer, drawPlayer } from "./player.js";
 import { drawGrid, drawGrass, drawGameOver, drawCenterLine } from "./grid.js";
-import { newSprite, drawSprite } from "./sprite.js";
+import { drawSprite } from "./sprite.js";
 import { canvasOffset } from "./util.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
@@ -58,15 +57,16 @@ function drawGame({
   mapWidth,
   mapHeight,
   gameOver,
+  gameOverReason,
 }) {
   ctx.reset();
   drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
   drawGrid(ctx, canvasOffset);
   drawCenterLine(ctx, canvasOffset);
   sprites.forEach((sprite) => drawSprite(ctx, canvasOffset, sprite));
-  drawPlayer(ctx, canvasOffset, player);
+  drawSprite(ctx, canvasOffset, player);
   if (gameOver) {
-    drawGameOver(ctx, canvas);
+    drawGameOver(ctx, canvas, gameOverReason, player.score);
   }
 }
 
@@ -132,6 +132,7 @@ function movePlayer(setState, command) {
         ...oldState,
         player: newPlayer,
         gameOver: true,
+        gameOverReason: collidingSprite.gameOverReason,
       };
     }
     return {

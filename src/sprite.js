@@ -38,6 +38,7 @@ const attributesMap = {
     impassible: false,
     death: true,
     canBeTrampled: false,
+    gameOverReason: "You fell in lava!",
   },
   coin: {
     color: "yellow",

@@ -63,10 +63,15 @@ export const drawGrass = (ctx, canvasOffset, mapWidth, mapHeight) => {
   ctx.fillRect(x, y, mapWidth * width, mapHeight * height);
 };
 
-export function drawGameOver(ctx, canvas) {
+export function drawGameOver(ctx, canvas, reason, score) {
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
+  ctx.textAlign = "center";
   ctx.font = "48px serif";
-  ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+  ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
+  ctx.font = "24px serif";
+  ctx.fillText(reason, canvas.width / 2, canvas.height / 2 + 30);
+  ctx.font = "24px serif";
+  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
 }
