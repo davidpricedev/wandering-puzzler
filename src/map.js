@@ -5,12 +5,12 @@ const mapString = `
 ##########
 # #   S  #
 #        #
-#        #
+# C     C#
 #   P    #
 #        #
-#  L  S  #
+# CL  S  #
 #        #
-#  S  S  #
+# CS  S  #
 ##########
 `.trim();
 

@@ -2,23 +2,21 @@
 <html>
   <head>
     <title>Vagabond</title>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
-      canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        border: 1px solid red;
-        background-color: #047304;
-        background-color: #444;
-      }
-    </style>
+    <style src="style.css"></style>
+    <link rel="stylesheet" href="style.css" type="text/css" />
   </head>
   <body>
-    <canvas></canvas>
-    <script id="canvas" type="module" src="index.js"></script>
+    <div class="menubar">
+      <div class="title">Vagabond</div>
+      <div class="menu">
+        <button class="menu-item" id="restart">Restart</button>
+        <button class="menu-item" id="help">Help</button>
+      </div>
+      <div class="score">Score: <span id="score">0</span></div>
+    </div>
+    <div class="canvas-container">
+      <canvas id="canvas"></canvas>
+    </div>
+    <script type="module" src="index.js"></script>
   </body>
 </html>

@@ -1,13 +1,13 @@
 import * as R from "ramda";
 import { newPlayer, drawPlayer } from "./player.js";
-import { drawGrid, drawGrass, drawGameOver } from "./grid.js";
+import { drawGrid, drawGrass, drawGameOver, drawCenterLine } from "./grid.js";
 import { newSprite, drawSprite } from "./sprite.js";
 import { canvasOffset } from "./util.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap } from "./constants.js";
 
-export function runGame(canvas, ctx) {
+export function runGame(canvas, ctx, scoreSpan, restartButton) {
   const {
     sprites: allSprites,
     width: mapWidth,
@@ -39,11 +39,14 @@ export function runGame(canvas, ctx) {
   const setState = (stateChangeFn) => {
     state = stateChangeFn(state);
     drawGame(state);
+    console.log(scoreSpan);
+    scoreSpan.textContent = state.player.score;
   };
 
   keyboardSetup();
   drawGame(state);
   const removeSubscription = subscribe(handleKeys(handleMovement(setState)));
+  restartButton.onclick = () => restartGame(setState);
 }
 
 function drawGame({
@@ -58,7 +61,8 @@ function drawGame({
 }) {
   ctx.reset();
   drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
-  drawGrid(ctx, canvas);
+  drawGrid(ctx, canvasOffset);
+  drawCenterLine(ctx, canvasOffset);
   sprites.forEach((sprite) => drawSprite(ctx, canvasOffset, sprite));
   drawPlayer(ctx, canvasOffset, player);
   if (gameOver) {
@@ -112,10 +116,14 @@ function movePlayer(setState, command) {
       const newSprites = R.reject(
         (sprite) => sprite.x === newPlayer.x && sprite.y === newPlayer.y,
       )(oldState.sprites);
+      console.log("newScore: ", newPlayer.score + collidingSprite.score);
       return {
         ...oldState,
         sprites: newSprites,
-        player: newPlayer,
+        player: {
+          ...newPlayer,
+          score: newPlayer.score + collidingSprite.score,
+        },
         spriteIndex: newSpriteIndex,
       };
     }

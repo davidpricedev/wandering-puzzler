@@ -14,6 +14,7 @@ const charToType = {
   P: "player",
   S: "shrubbery",
   L: "lava",
+  C: "coin",
 };
 
 const attributesMap = {
@@ -24,17 +25,25 @@ const attributesMap = {
   },
   player: {
     color: "red",
+    score: 0,
   },
   shrubbery: {
     color: "green",
     impassible: false,
     canBeTrampled: true,
+    score: 0,
   },
   lava: {
     color: "orange",
     impassible: false,
     death: true,
     canBeTrampled: false,
+  },
+  coin: {
+    color: "yellow",
+    impassible: false,
+    canBeTrampled: true,
+    score: 10,
   },
 };
 

@@ -7,7 +7,7 @@ My first foray into canvas, and my first game.
 
 ## Puzzle components
 
-- Loot
+- Coin
   - stationary, static
   - removed from the map (and placed into player inventory) when player moves over it
 - Arrow
