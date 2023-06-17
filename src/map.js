@@ -1,12 +1,12 @@
 import * as R from "ramda";
 import { newSprite } from "./sprite";
 
-const mapString = `
+const mapString = String.raw`
 ##########
 # #   S  #
 #        #
-# C     C#
-#   P    #
+# C   B C#
+# \ P /  #
 #        #
 # CL  S  #
 #        #

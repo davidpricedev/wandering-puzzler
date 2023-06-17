@@ -73,5 +73,5 @@ export function drawGameOver(ctx, canvas, reason, score) {
   ctx.font = "24px serif";
   ctx.fillText(reason, canvas.width / 2, canvas.height / 2 + 30);
   ctx.font = "24px serif";
-  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
+  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
 }

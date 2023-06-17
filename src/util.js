@@ -1,4 +1,5 @@
-import { gridSize } from "./constants";
+import * as R from "ramda";
+import { directionMap, gridSize } from "./constants";
 
 export const center = (canvas) => {
   return {
@@ -27,3 +28,30 @@ export const canvasOffset = (canvas, centerX, centerY) => ({
     height: gridSize,
   }),
 });
+
+export const vectorAdd = (a, b) => ({
+  x: a.x + b.x,
+  y: a.y + b.y,
+});
+
+export const vectorScale = (a, scalar) => ({
+  x: a.x * scalar,
+  y: a.y * scalar,
+});
+
+export const vectorPairString = (a) => `${a.x},${a.y}`;
+
+export const vectorEqual = (a, b) => a?.x === b?.x && a?.y === b?.y;
+
+export function getNeighboringSprites(player, spriteIndex) {
+  // const neighbors = [
+  //   `${player.x},${player.y - 1}`,
+  //   `${player.x},${player.y + 1}`,
+  //   `${player.x - 1},${player.y}`,
+  //   `${player.x + 1},${player.y}`,
+  // ];
+  const neighbors = Object.values(directionMap).map(
+    (x) => `${player.x + x.x},${player.y + x.y}`,
+  );
+  return R.pick(neighbors, spriteIndex);
+}

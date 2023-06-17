@@ -17,6 +17,7 @@ My first foray into canvas, and my first game.
   - will be stopped by any static item (landmine, wall, diamond)
   - will be redirected up/down one step when encountering an angled wall
   - Can hold up a Rock
+  - player can push an arrow up/down if it can move into open space
 - Lava
   - stationary, static
   - will end the game if the player walks into it
@@ -27,6 +28,7 @@ My first foray into canvas, and my first game.
   - will be redirected one step to left/right by angled wall
   - will move down diagonally if possible when obeying gravity - but only when sitting on top of another rock
   - can stop an arrow
+  - player can push the rock left/right if it can move into open space
 - Wall
   - stationary, static
 - Shrubbery

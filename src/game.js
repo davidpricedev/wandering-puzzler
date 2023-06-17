@@ -1,10 +1,16 @@
 import * as R from "ramda";
 import { drawGrid, drawGrass, drawGameOver, drawCenterLine } from "./grid.js";
 import { drawSprite } from "./sprite.js";
-import { canvasOffset } from "./util.js";
+import {
+  canvasOffset,
+  vectorAdd,
+  getNeighboringSprites,
+  vectorPairString,
+} from "./util.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap } from "./constants.js";
+import { handleRockCollision } from "./rockMove.js";
 
 export function runGame(canvas, ctx, scoreSpan, restartButton) {
   const {
@@ -17,7 +23,7 @@ export function runGame(canvas, ctx, scoreSpan, restartButton) {
     allSprites,
   );
   const spriteIndex = R.reduce(
-    (acc, sprite) => ({ ...acc, [`${sprite.x},${sprite.y}`]: sprite }),
+    (acc, sprite) => ({ ...acc, [vectorPairString(sprite)]: sprite }),
     {},
     sprites,
   );
@@ -38,7 +44,6 @@ export function runGame(canvas, ctx, scoreSpan, restartButton) {
   const setState = (stateChangeFn) => {
     state = stateChangeFn(state);
     drawGame(state);
-    console.log(scoreSpan);
     scoreSpan.textContent = state.player.score;
   };
 
@@ -100,19 +105,15 @@ function movePlayer(setState, command) {
       return oldState;
     }
 
-    const newPosition = {
-      x: player.x + command.x,
-      y: player.y + command.y,
-    };
+    const newPosition = vectorAdd(player, command);
     const newPlayer = { ...player, ...newPosition };
-    const collidingSprite = spriteIndex[`${newPlayer.x},${newPlayer.y}`];
+    const newNeighbors = getNeighboringSprites(newPlayer, oldState.spriteIndex);
+    const collidingSprite = spriteIndex[vectorPairString(newPlayer)];
     if (collidingSprite && collidingSprite.impassible) {
       return oldState;
     }
     if (collidingSprite && collidingSprite.canBeTrampled) {
-      const newSpriteIndex = R.omit([`${newPlayer.x},${newPlayer.y}`])(
-        spriteIndex,
-      );
+      const newSpriteIndex = R.omit([vectorPairString(newPlayer)])(spriteIndex);
       const newSprites = R.reject(
         (sprite) => sprite.x === newPlayer.x && sprite.y === newPlayer.y,
       )(oldState.sprites);
@@ -131,13 +132,24 @@ function movePlayer(setState, command) {
       return {
         ...oldState,
         player: newPlayer,
+        neighbors: newNeighbors,
         gameOver: true,
         gameOverReason: collidingSprite.gameOverReason,
       };
     }
+    if (collidingSprite && collidingSprite.type === "rock") {
+      return handleRockCollision({
+        setState,
+        oldState,
+        newPlayer,
+        collidingSprite,
+        command,
+      });
+    }
     return {
       ...oldState,
       player: newPlayer,
+      neighbors: newNeighbors,
     };
   });
 }
