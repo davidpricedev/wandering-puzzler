@@ -1,0 +1,24 @@
+{
+  "name": "vagabond",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "vite",
+    "test": "vitest"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "prettier": "^2.8.8",
+    "vite": "^4.3.9",
+    "vitest": "^0.32.1"
+  },
+  "dependencies": {
+    "ramda": "^0.29.0"
+  }
+}
