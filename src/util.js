@@ -12,15 +12,15 @@ export const gridOffset = (canvas) => ({
   y: (canvas.height / 2) % gridSize,
 });
 
-export const canvasOffset = (canvas) => ({
-  x: (canvas.width / 2),
+export const canvasOffset = (canvas, centerX, centerY) => ({
+  x: (canvas.width / 2) - centerX,
   y: (canvas.height / 2),
   gridSize,
   width: gridSize,
   height: gridSize,
   translateAndScale: ({x, y}) => ({
-    x: x * gridSize + canvas.width / 2,
-    y: y * gridSize + canvas.height / 2,
+    x: (x - centerX) * gridSize + canvas.width / 2,
+    y: (y - centerY) * gridSize + canvas.height / 2,
     width: gridSize,
     height: gridSize,
   }),

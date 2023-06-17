@@ -1,8 +1,8 @@
 import * as R from 'ramda';
-import { gridColor, gridSize } from './constants';
+import { grassColor, gridColor, gridSize } from './constants';
 import { gridOffset } from './util';
 
-export function drawGrid(canvas, ctx) {
+export function drawGrid(ctx, canvas) {
   const { x: xoffset, y: yoffset } = gridOffset(canvas);
   R.range(0, canvas.height / gridSize + 1).forEach(i => {
     drawLine({ ctx, start: { x: 0, y: i * gridSize - yoffset }, end: { x: canvas.width, y: i * gridSize - yoffset }, color: gridColor })
@@ -20,3 +20,9 @@ export function drawLine({ ctx, start, end, color }) {
   ctx.lineTo(end.x, end.y);
   ctx.stroke();
 }
+
+export const drawGrass = (ctx, canvasOffset, mapWidth, mapHeight) => {
+  ctx.fillStyle = grassColor;
+  const { x, y, width, height } = canvasOffset.translateAndScale({ x: 0, y: 0 });
+  ctx.fillRect(x, y, mapWidth * width, mapHeight * height);
+};
