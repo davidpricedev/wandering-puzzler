@@ -17,7 +17,7 @@ My first foray into canvas, and my first game.
   - will be stopped by any static item (landmine, wall, diamond)
   - will be redirected up/down one step when encountering an angled wall
   - Can hold up a Rock
-- Poison Ivy
+- Lava
   - stationary, static
   - will end the game if the player walks into it
 - Rock

@@ -1,14 +1,13 @@
 import * as R from "ramda";
 import { newPlayer, drawPlayer } from "./player.js";
-import { drawGrid, drawGrass } from "./grid.js";
+import { drawGrid, drawGrass, drawGameOver } from "./grid.js";
 import { newSprite, drawSprite } from "./sprite.js";
-import { KEY_MAP, subscribe } from "./keyboard.js";
 import { canvasOffset } from "./util.js";
 import { readStaticMap } from "./map.js";
+import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
+import { directionMap } from "./constants.js";
 
 export function runGame(canvas, ctx) {
-  console.log("canvas dims: ", canvas.width, canvas.height);
-  console.log("map: ", readStaticMap());
   const {
     sprites: allSprites,
     width: mapWidth,
@@ -23,26 +22,28 @@ export function runGame(canvas, ctx) {
     {},
     sprites,
   );
-  console.log("canvasOffset: ", canvasOffset);
-  let state = {};
-  const setState = (stateChangeFn) => {
-    state = stateChangeFn(state);
-    drawGame(state);
-  };
-  state = {
+  const initialState = {
     player: player,
     sprites,
     canvas,
     ctx,
     spriteIndex,
-    setState,
     canvasOffset: canvasOffset(canvas, player.x, player.y),
     mapWidth,
     mapHeight,
   };
+  let state = {
+    initialState,
+    ...initialState,
+  };
+  const setState = (stateChangeFn) => {
+    state = stateChangeFn(state);
+    drawGame(state);
+  };
 
+  keyboardSetup();
   drawGame(state);
-  const removeSubscription = subscribe(handleKeys(state));
+  const removeSubscription = subscribe(handleKeys(handleMovement(setState)));
 }
 
 function drawGame({
@@ -53,55 +54,77 @@ function drawGame({
   canvasOffset,
   mapWidth,
   mapHeight,
+  gameOver,
 }) {
   ctx.reset();
   drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
   drawGrid(ctx, canvas);
-  drawPlayer(ctx, canvasOffset, player);
   sprites.forEach((sprite) => drawSprite(ctx, canvasOffset, sprite));
+  drawPlayer(ctx, canvasOffset, player);
+  if (gameOver) {
+    drawGameOver(ctx, canvas);
+  }
 }
 
-const handleKeys = (state) => (type, ev) => {
-  if (type === "keypress") {
-    return;
-  }
-  if (!KEY_MAP[ev.key]) {
-    return;
-  }
-  handleMovement(state, type, KEY_MAP[ev.key]);
-};
-
-const handleMovement = (state, type, direction) => {
+const handleMovement = (setState) => (type, commandType) => {
   if (type !== "keydown") {
     return;
   }
 
-  console.log("direction: ", direction);
+  const direction = directionMap[commandType];
   const directionTable = {
-    up: () => movePlayer(state, { x: 0, y: -1 }),
-    down: () => movePlayer(state, { x: 0, y: 1 }),
-    left: () => movePlayer(state, { x: -1, y: 0 }),
-    right: () => movePlayer(state, { x: 1, y: 0 }),
+    restart: () => restartGame(setState),
+    up: () => movePlayer(setState, direction),
+    down: () => movePlayer(setState, direction),
+    left: () => movePlayer(setState, direction),
+    right: () => movePlayer(setState, direction),
   };
-  directionTable[direction]();
+  directionTable[commandType]();
 };
 
-function movePlayer(state, direction) {
-  state.setState((oldState) => {
-    const { player, spriteIndex } = oldState;
+function restartGame(setState) {
+  setState((oldState) => ({
+    initialState: oldState.initialState,
+    ...oldState.initialState,
+  }));
+}
+
+function movePlayer(setState, command) {
+  setState((oldState) => {
+    const { player, spriteIndex, gameOver } = oldState;
+    if (gameOver) {
+      return oldState;
+    }
+
     const newPosition = {
-      x: player.x + direction.x,
-      y: player.y + direction.y,
+      x: player.x + command.x,
+      y: player.y + command.y,
     };
     const newPlayer = { ...player, ...newPosition };
-    console.log(
-      `(${player.x},${player.y}) -> (${player.x + direction.x},${
-        player.y + direction.y
-      })`,
-    );
     const collidingSprite = spriteIndex[`${newPlayer.x},${newPlayer.y}`];
-    if (collidingSprite) {
+    if (collidingSprite && collidingSprite.impassible) {
       return oldState;
+    }
+    if (collidingSprite && collidingSprite.canBeTrampled) {
+      const newSpriteIndex = R.omit([`${newPlayer.x},${newPlayer.y}`])(
+        spriteIndex,
+      );
+      const newSprites = R.reject(
+        (sprite) => sprite.x === newPlayer.x && sprite.y === newPlayer.y,
+      )(oldState.sprites);
+      return {
+        ...oldState,
+        sprites: newSprites,
+        player: newPlayer,
+        spriteIndex: newSpriteIndex,
+      };
+    }
+    if (collidingSprite && collidingSprite.death) {
+      return {
+        ...oldState,
+        player: newPlayer,
+        gameOver: true,
+      };
     }
     return {
       ...oldState,

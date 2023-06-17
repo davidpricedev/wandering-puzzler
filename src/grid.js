@@ -7,6 +7,7 @@ export function drawGrid(ctx, canvasOffset) {
     y: canvasOffset.y % canvasOffset.gridSize,
   };
   R.range(0, canvas.height / gridSize + 1).forEach((i) => {
+    console.log("drawing V line", i, gridSize, offset.x, offset.y);
     drawLine({
       ctx,
       start: { x: 0, y: i * gridSize - offset.y },
@@ -41,3 +42,11 @@ export const drawGrass = (ctx, canvasOffset, mapWidth, mapHeight) => {
   });
   ctx.fillRect(x, y, mapWidth * width, mapHeight * height);
 };
+
+export function drawGameOver(ctx, canvas) {
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "48px serif";
+  ctx.fillText("Game Over", canvas.width / 2 - 100, canvas.height / 2);
+}

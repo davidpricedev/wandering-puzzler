@@ -3,14 +3,14 @@ import { newSprite } from "./sprite";
 
 const mapString = `
 ##########
-# #      #
+# #   S  #
 #        #
 #        #
 #   P    #
 #        #
+#  L  S  #
 #        #
-#        #
-#        #
+#  S  S  #
 ##########
 `.trim();
 

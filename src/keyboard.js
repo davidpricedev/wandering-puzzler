@@ -1,21 +1,26 @@
 const handlers = [];
 
 export const KEY_MAP = {
+  // arrow keys
   ArrowUp: "up",
   ArrowDown: "down",
   ArrowLeft: "left",
   ArrowRight: "right",
+  // wasd/gaming keys
   w: "up",
   s: "down",
   a: "left",
   d: "right",
+  // vim keys
   h: "left",
   j: "down",
   k: "up",
   l: "right",
+  // Meta keys
+  Escape: "restart",
 };
 
-function setup() {
+export function keyboardSetup() {
   window.addEventListener("keydown", (ev) => {
     handlers.forEach((handle) => {
       handle("keydown", ev);
@@ -41,4 +46,12 @@ export function subscribe(handler) {
   };
 }
 
-setup();
+export const handleKeys = (callback) => (type, ev) => {
+  if (type === "keypress") {
+    return;
+  }
+  if (!KEY_MAP[ev.key]) {
+    return;
+  }
+  callback(type, KEY_MAP[ev.key]);
+};
