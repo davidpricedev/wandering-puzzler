@@ -26,7 +26,10 @@ export const map = (mapString) => {
 };
 
 const extractSprites = R.pipe(
-  lines => lines.map((row, y) => row.split("").map((char, x) => newSprite(x, y, char))),
+  (lines) =>
+    lines.map((row, y) =>
+      row.split("").map((char, x) => newSprite(x, y, char)),
+    ),
   R.flatten,
-  R.filter(x => x !== null),
+  R.filter((x) => x !== null),
 );

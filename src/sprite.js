@@ -9,18 +9,18 @@ export function newSprite(x, y, char) {
 
 const charToType = {
   "#": "wall",
-  "P": "player",
+  P: "player",
 };
 
 const spriteTypes = {
-  "wall": {
+  wall: {
     color: "grey",
   },
-  "player": {
+  player: {
     color: "red",
   },
-  "shrubbery": {
-    color: "green"
+  shrubbery: {
+    color: "green",
   },
 };
 
