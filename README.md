@@ -1,4 +1,4 @@
-# Vagabond
+# Wandering Puzzler
 
 Inspired by an old puzzle game from 1988 called Wanderer which was available on Amiga.
 I believe [this](https://github.com/sshipway/wanderer) is the source code for that game?
@@ -63,7 +63,6 @@ Goals:
   - What about proper animations instead of turn-based updates?
   - Alternative graphics options (icon sets)?
   - sounds?
-  - next?: [https://dosgames.com/game/fgodmom/](https://dosgames.com/game/fgodmom/)
 
 ## Technical aspects
 
