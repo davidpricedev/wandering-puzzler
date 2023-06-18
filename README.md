@@ -26,7 +26,7 @@ My first foray into canvas, and my first game.
   - will start moving (if possible) on the move/turn after a player moves into an adjascent space (or an adjascent item moves) or the item the rock was resting is removed
   - will end the game if it lands on the player
   - will be redirected one step to left/right by angled wall
-  - will move down diagonally if possible when obeying gravity - but only when sitting on top of another rock
+  - will move down diagonally if possible when obeying gravity - but only when not sitting on top of a wall
   - can stop an arrow
   - player can push the rock left/right if it can move into open space
 - Wall
@@ -63,3 +63,10 @@ Goals:
   - Alternative graphics options (icon sets)?
   - sounds?
   - next?: [https://dosgames.com/game/fgodmom/](https://dosgames.com/game/fgodmom/)
+
+## Technical aspects
+
+Dependencies:
+
+- ramda - for all functional programming needs
+- dataclass - a simple immutable dataclass implementation for javascript

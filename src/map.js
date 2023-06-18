@@ -1,9 +1,9 @@
 import * as R from "ramda";
-import { newSprite } from "./sprite";
+import { Sprite, parseMapChar } from "./sprite";
 
 const mapString = String.raw`
 ##########
-# #   S  #
+# #  BS  #
 #        #
 # C   B C#
 # \ P /  #
@@ -14,10 +14,11 @@ const mapString = String.raw`
 ##########
 `.trim();
 
-export const readStaticMap = () => map(mapString);
+export const readStaticMap = () => parseMap(mapString);
 
-export const map = (mapString) => {
+export const parseMap = (mapString) => {
   const lines = mapString.trim().split("\n");
+  console.log("sprites: ", extractSprites(lines));
   return {
     sprites: extractSprites(lines),
     height: lines.length,
@@ -28,7 +29,7 @@ export const map = (mapString) => {
 const extractSprites = R.pipe(
   (lines) =>
     lines.map((row, y) =>
-      row.split("").map((char, x) => newSprite(x, y, char)),
+      row.split("").map((char, x) => parseMapChar(x, y, char)),
     ),
   R.flatten,
   R.filter((x) => x !== null),

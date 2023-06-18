@@ -1,5 +1,5 @@
 import * as R from "ramda";
-import { grassColor, gridColor } from "./constants";
+import { gridColor } from "./constants";
 
 export function drawGrid(ctx, canvasOffset) {
   const {
@@ -44,34 +44,12 @@ export function drawCenterLine(ctx, canvasOffset) {
     ctx,
     start: { x: x, y: 0 },
     end: { x: x, y: canvasHeight },
-    color: "red",
+    color: "rgba(155,0,0,0.05)",
   });
   drawLine({
     ctx,
     start: { x: 0, y: y },
     end: { x: canvasWidth, y: y },
-    color: "red",
+    color: "rgba(155,0,0,0.05)",
   });
-}
-
-export const drawGrass = (ctx, canvasOffset, mapWidth, mapHeight) => {
-  ctx.fillStyle = grassColor;
-  const { x, y, width, height } = canvasOffset.translateAndScale({
-    x: 0,
-    y: 0,
-  });
-  ctx.fillRect(x, y, mapWidth * width, mapHeight * height);
-};
-
-export function drawGameOver(ctx, canvas, reason, score) {
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
-  ctx.font = "48px serif";
-  ctx.fillText("Game Over", canvas.width / 2, canvas.height / 2);
-  ctx.font = "24px serif";
-  ctx.fillText(reason, canvas.width / 2, canvas.height / 2 + 30);
-  ctx.font = "24px serif";
-  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
 }

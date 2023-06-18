@@ -1,6 +1,6 @@
 import * as R from "ramda";
 import { directionMap, fastTickInterval, tickInterval } from "./constants";
-import { vectorAdd, vectorEqual, vectorPairString } from "./util";
+import { vectorAdd } from "./util";
 
 export function handleRockCollision({
   setState,
@@ -15,56 +15,62 @@ export function handleRockCollision({
     return oldState;
   }
 
-  const { spriteIndex } = oldState;
+  const { sprites } = oldState;
   const newRockPosition = vectorAdd(collidingSprite, command);
-  if (spriteIndex[`${newRockPosition.x},${newRockPosition.y}`]) {
+  if (sprites.getAt(newRockPosition)) {
     // rock can't move into a space occupied by another sprite
     return oldState;
   }
 
   const newRock = { ...collidingSprite, ...newRockPosition };
-  const newSpriteIndex = R.omit([`${collidingSprite.x},${collidingSprite.y}`])(
-    spriteIndex,
-  );
-  const newSpriteIndexWithRock = {
-    ...newSpriteIndex,
-    [`${newRockPosition.x},${newRockPosition.y}`]: newRock,
-  };
-  const newSprites = R.map((sprite) =>
-    vectorEqual(collidingSprite, sprite) ? newRock : sprite,
-  )(oldState.sprites);
+  const newSprites = sprites.move(collidingSprite, newRockPosition);
 
   setTimeout(() => animateRock(setState, newRock), fastTickInterval);
 
-  return {
-    ...oldState,
+  return oldState.copy({
     player: newPlayer,
     sprites: newSprites,
-    spriteIndex: newSpriteIndexWithRock,
-  };
+  });
+}
+
+function canFall(sprite, sprites) {
+  const downleft = { type: "move", direction: "downleft", x: -1, y: 1 };
+  const downright = { type: "move", direction: "downright", x: +1, y: 1 };
+
+  const downSprite = sprites.getAt(vectorAdd(sprite, directionMap.down));
+  if (!downSprite) {
+    return directionMap.down;
+  }
+
+  if (downSprite.spriteType === "wall") {
+    return false;
+  }
+
+  if (!sprites.getAt(vectorAdd(sprite, downleft))) {
+    return downleft;
+  }
+
+  if (!sprites.getAt(vectorAdd(sprite, downright))) {
+    return downright;
+  }
+
+  return false;
 }
 
 /** Once we've started a rock moving it moves on its own until it can't move anymore */
 function animateRock(setState, rock) {
   setState((oldState) => {
     console.log("animating before state: ", oldState);
-    const { spriteIndex } = oldState;
-    if (spriteIndex[vectorPairString(vectorAdd(rock, directionMap.down))]) {
+    const { sprites } = oldState;
+    if (sprites.getAt(vectorAdd(rock, directionMap.down))) {
       return oldState;
-    } else {
-      const newRockPos = vectorAdd(rock, directionMap.down);
-      const newRock = { ...rock, ...newRockPos };
-      setTimeout(() => animateRock(setState, newRock), tickInterval);
-      return {
-        ...oldState,
-        sprites: oldState.sprites.map((sprite) =>
-          vectorEqual(rock, sprite) ? newRock : sprite,
-        ),
-        spriteIndex: {
-          ...R.omit([vectorPairString(rock)], oldState.spriteIndex),
-          [vectorPairString(vectorAdd(rock, directionMap.down))]: rock,
-        },
-      };
     }
+
+    const newRockPos = vectorAdd(rock, directionMap.down);
+    const newRock = { ...rock, ...newRockPos };
+    setTimeout(() => animateRock(setState, newRock), tickInterval);
+    return oldState.copy({
+      sprites: sprites.move(rock, newRockPos),
+    });
   });
 }
