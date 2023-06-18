@@ -43,9 +43,6 @@ function getFallDirection(sprite, sprites) {
     return down;
   }
 
-  // if (downSprite.spriteType === "wall") {
-  //   return false;
-  // }
   console.log("downSprite.allowedFlows: ", downSprite.allowedFlows);
   console.log(
     "can downLeft: ",

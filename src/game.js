@@ -1,6 +1,6 @@
 import * as R from "ramda";
 import { drawGrid, drawCenterLine } from "./grid.js";
-import { drawGrass, drawGameOver } from "./framing.js";
+import { drawGrass, drawGameOver, drawBusy } from "./framing.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap, tickInterval } from "./constants.js";
@@ -10,8 +10,9 @@ import { Point } from "./point.js";
 import { animateArrow } from "./arrowMove.js";
 import { animateRock } from "./rockMove.js";
 
-export function runGame(canvas, ctx, scoreSpan, restartButton) {
-  let state = GameState.initialize(readStaticMap(), canvas);
+export async function runGame(canvas, scoreSpan, restartButton) {
+  const assets = await loadAssets();
+  let state = GameState.initialize(readStaticMap(), canvas, assets);
 
   const setState = (stateChangeFn) => {
     const newState = stateChangeFn(state);
@@ -37,20 +38,26 @@ function drawGame({
   mapHeight,
   gameOver,
   gameOverReason,
+  assets,
+  animateQueue,
 }) {
   ctx.reset();
   drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
   drawGrid(ctx, canvasOffset);
-  drawCenterLine(ctx, canvasOffset);
-  sprites.forEach((sprite) => sprite.draw(ctx, canvasOffset));
-  player.draw(ctx, canvasOffset);
+  sprites.forEach((sprite) => sprite.draw(ctx, canvasOffset, assets));
+  player.draw(ctx, canvasOffset, assets);
+  if (animateQueue.length > 0) {
+    drawBusy(ctx, canvas);
+  }
   if (gameOver) {
     drawGameOver(ctx, canvas, gameOverReason, player.score);
   }
 }
 
 const restartGame = (setState) => () => {
-  setState((old) => GameState.initialize(readStaticMap(), old.canvas));
+  setState((old) =>
+    GameState.initialize(readStaticMap(), old.canvas, old.assets),
+  );
 };
 
 const handleMovement = (setState) => (type, commandType) => {
@@ -102,4 +109,26 @@ function runAnimationQueue(setState, animateQueue) {
       animateArrow(setState, sprite);
     }
   });
+}
+
+async function loadAssets() {
+  const imagesToLoad = [
+    ["rock", "assets/rock.svg"],
+    ["arrow", "assets/arrow.svg"],
+    ["player", "assets/player.svg"],
+    ["cactus", "assets/bomb.svg"],
+    ["shrubbery", "assets/shrub.svg"],
+    ["wall", "assets/wallTexture.png"],
+    ["coin", "assets/coin.svg"],
+  ];
+  const imgs = await Promise.all(
+    imagesToLoad.map(([k, src]) => {
+      const img = new Image();
+      img.src = src;
+      return new Promise((resolve) => {
+        img.onload = () => resolve({ [k]: img });
+      });
+    }),
+  );
+  return R.reduce((acc, img_1) => ({ ...acc, ...img_1 }), {}, imgs);
 }

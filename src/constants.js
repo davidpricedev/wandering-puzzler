@@ -1,4 +1,4 @@
-export const gridSize = 10;
+export const gridSize = 50;
 
 // export const gridColor = "#027102";
 export const gridColor = "rgb(0, 0, 0, .02)";
@@ -12,15 +12,15 @@ export const directionMap = {
   right: { type: "move", direction: "right", x: 1, y: 0 },
 };
 
-export const tickInterval = 250;
+export const tickInterval = 150;
 
-export const fastTickInterval = 100;
+export const fastTickInterval = 0;
 
 export const charToType = {
   "#": "wall",
   P: "player",
   S: "shrubbery",
-  L: "lava",
+  L: "cactus",
   C: "coin",
   "/": "rightLeanWall",
   "\\": "leftLeanWall",

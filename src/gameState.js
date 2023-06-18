@@ -13,10 +13,10 @@ export class GameState extends Data {
   mapHeight = 0;
   gameOver = false;
   gameOverReason = "";
-  neighbors = null;
   animateQueue = [];
+  assets = null;
 
-  static initialize(mapData, canvas) {
+  static initialize(mapData, canvas, assets) {
     const { sprites: allSprites, width: mapWidth, height: mapHeight } = mapData;
     const [[player], spriteList] = R.partition(
       (x) => x.spriteType === "player",
@@ -27,12 +27,12 @@ export class GameState extends Data {
     return GameState.create({
       player,
       sprites,
-      neighbors: sprites.getNeighbors(player),
       canvas,
       ctx: canvas.getContext("2d"),
       canvasOffset,
       mapWidth,
       mapHeight,
+      assets,
     });
   }
 }

@@ -23,6 +23,15 @@ export function drawGameOver(ctx, canvas, reason, score) {
   ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
 }
 
+export function drawBusy(ctx, canvas) {
+  ctx.fillStyle = "rgba(0,0,0,0.15)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.font = "12px serif";
+  ctx.fillText("working...", canvas.width / 2, 20);
+}
+
 /**
  * center is the desired center point relative to the map (not the canvas)
  * translation needs to account for the size of the grid too, so subtract 0.5
