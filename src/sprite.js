@@ -1,6 +1,7 @@
 import * as R from "ramda";
 import { Data } from "dataclass";
 import { charToType } from "./constants";
+import { Point } from "./point";
 
 export class Sprite extends Data {
   x = 0;
@@ -14,6 +15,12 @@ export class Sprite extends Data {
   death = false;
   gameOverReason = "";
   isMobile = false;
+  allowedFlows = [
+    Point.upLeft(),
+    Point.upRight(),
+    Point.downLeft(),
+    Point.downRight(),
+  ];
 
   static fromType(x, y, spriteType) {
     return Sprite.create({
@@ -31,6 +38,14 @@ export class Sprite extends Data {
 
   moveTo(pos) {
     return this.copy({ x: pos.x, y: pos.y });
+  }
+
+  isRock() {
+    return this.spriteType === "rock";
+  }
+
+  isArrow() {
+    return ["leftArrow", "rightArrow"].includes(this.spriteType);
   }
 }
 
@@ -53,36 +68,45 @@ const drawSquare = (ctx, canvasOffset, sprite) => {
 const wallAttributes = {
   color: "grey",
   impassible: true,
-  canBeTrampled: false,
+  allowedFlows: [],
+};
+const arrowAttributes = {
+  color: "pink",
+  isMobile: true,
+  allowedFlows: [],
 };
 
 const attributesMap = {
   wall: wallAttributes,
-  leftLeanWall: wallAttributes,
-  rightLeanWall: wallAttributes,
+  leftLeanWall: {
+    ...wallAttributes,
+    allowedFlows: [Point.upLeft(), Point.downRight()],
+  },
+  rightLeanWall: {
+    ...wallAttributes,
+    allowedFlows: [Point.upRight(), Point.downLeft()],
+  },
   shrubbery: {
     color: "green",
-    impassible: false,
     canBeTrampled: true,
     score: 0,
+    allowedFlows: [],
   },
   lava: {
     color: "orange",
-    impassible: false,
     death: true,
-    canBeTrampled: false,
     gameOverReason: "You fell in lava!",
+    allowedFlows: [],
   },
   coin: {
     color: "yellow",
-    impassible: false,
     canBeTrampled: true,
     score: 10,
   },
   rock: {
     color: "brown",
-    impassible: false,
-    canBeTrampled: false,
     isMobile: true,
   },
+  leftArrow: arrowAttributes,
+  rightArrow: arrowAttributes,
 };

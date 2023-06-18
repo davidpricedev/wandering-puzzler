@@ -1,6 +1,7 @@
 import * as R from "ramda";
 import { handleRockCollision, animateRock } from "./rockMove.js";
 import { Point } from "./point.js";
+import { animateArrow, handleArrowCollision } from "./arrowMove.js";
 
 export function movePlayer(oldState, setState, command) {
   const { player, sprites, gameOver, animateQueue, neighbors } = oldState;
@@ -14,31 +15,34 @@ export function movePlayer(oldState, setState, command) {
     return oldState;
   }
 
-  const newAnimateQueue = neighbors.filter((s) => s.isMobile);
-  setTimeout(() => runAnimationQueue(setState, newAnimateQueue), 1);
-
   const newNeighbors = sprites.getNeighbors(newPlayer);
   if (collidingSprite && collidingSprite.canBeTrampled) {
     return oldState.copy({
-      neighbors: newNeighbors,
       sprites: sprites.removeAt(newPlayer),
       player: newPlayer.addScore(collidingSprite.score),
-      animateQueue: newAnimateQueue,
     });
   }
 
   if (collidingSprite && collidingSprite.death) {
     return oldState.copy({
       player: newPlayer,
-      neighbors: newNeighbors,
       gameOver: true,
       gameOverReason: collidingSprite.gameOverReason,
-      animateQueue: newAnimateQueue,
     });
   }
 
-  if (collidingSprite && collidingSprite.spriteType === "rock") {
+  if (collidingSprite && collidingSprite.isRock()) {
     return handleRockCollision({
+      setState,
+      oldState,
+      newPlayer,
+      collidingSprite,
+      command,
+    });
+  }
+
+  if (collidingSprite && collidingSprite.isArrow()) {
+    return handleArrowCollision({
       setState,
       oldState,
       newPlayer,
@@ -50,15 +54,5 @@ export function movePlayer(oldState, setState, command) {
   // walk into empty space
   return oldState.copy({
     player: newPlayer,
-    neighbors: newNeighbors,
-    animateQueue: newAnimateQueue,
-  });
-}
-
-function runAnimationQueue(setState, animateQueue) {
-  animateQueue.forEach((sprite) => {
-    if (sprite.spriteType === "rock") {
-      animateRock(setState, sprite);
-    }
   });
 }

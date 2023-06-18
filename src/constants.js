@@ -25,4 +25,6 @@ export const charToType = {
   "/": "rightLeanWall",
   "\\": "leftLeanWall",
   B: "rock",
+  ">": "rightArrow",
+  "<": "leftArrow",
 };

@@ -15,7 +15,7 @@ export function handleRockCollision({
     return oldState;
   }
 
-  const { sprites, neighbors } = oldState;
+  const { sprites, neighbors, player } = oldState;
   const newRockPosition = Point.of(collidingSprite).add(command);
   if (sprites.getAt(newRockPosition)) {
     // rock can't move into a space occupied by another sprite
@@ -28,10 +28,8 @@ export function handleRockCollision({
   setTimeout(() => animateRock(setState, newRock), fastTickInterval);
 
   return oldState.copy({
-    neighbors: newSprites.getNeighbors(newRock),
     player: newPlayer,
     sprites: newSprites,
-    animateQueue: neighbors.filter((s) => s.isMobile),
   });
 }
 
@@ -45,20 +43,33 @@ function getFallDirection(sprite, sprites) {
     return down;
   }
 
-  if (downSprite.spriteType === "wall") {
-    return false;
-  }
+  // if (downSprite.spriteType === "wall") {
+  //   return false;
+  // }
+  console.log("downSprite.allowedFlows: ", downSprite.allowedFlows);
+  console.log(
+    "can downLeft: ",
+    downSprite.allowedFlows.includes(downleft),
+    Point.arrayInclues(downleft, downSprite.allowedFlows),
+  );
+  console.log(
+    "can downRight: ",
+    downSprite.allowedFlows.includes(downright),
+    Point.arrayInclues(downright, downSprite.allowedFlows),
+  );
 
   if (
     !sprites.getAt(downleft.add(sprite)) &&
-    downSprite.spriteType !== "leftLeanWall"
+    !sprites.getAt(Point.left().add(sprite)) &&
+    Point.arrayInclues(downleft, downSprite.allowedFlows)
   ) {
     return downleft;
   }
 
   if (
     !sprites.getAt(downright.add(sprite)) &&
-    downSprite.spriteType !== "rightLeanWall"
+    !sprites.getAt(Point.right().add(sprite)) &&
+    Point.arrayInclues(downright, downSprite.allowedFlows)
   ) {
     return downright;
   }
@@ -74,6 +85,7 @@ export function animateRock(setState, rock) {
     const fallDirection = getFallDirection(rock, sprites);
     const queueWithoutRock = animateQueue.filter((s) => !s.equals(rock));
     if (!fallDirection) {
+      console.log("cleaning up rock", rock, queueWithoutRock);
       return oldState.copy({
         animateQueue: queueWithoutRock,
       });
@@ -85,7 +97,7 @@ export function animateRock(setState, rock) {
       return oldState.copy({
         animateQueue: queueWithoutRock,
         gameOver: true,
-        gameOverReason: "You were crushed by a rock",
+        gameOverReason: "You were bonked by a rock",
       });
     }
 

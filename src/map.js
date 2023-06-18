@@ -7,7 +7,7 @@ const mapString = String.raw`
 ##########
 # #   S  #
 # B   B  #
-# C     C#
+# > C < C#
 # \ PC/  #
 #        #
 # CL  S  #

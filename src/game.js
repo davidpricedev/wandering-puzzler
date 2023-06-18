@@ -3,15 +3,19 @@ import { drawGrid, drawCenterLine } from "./grid.js";
 import { drawGrass, drawGameOver } from "./framing.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
-import { directionMap } from "./constants.js";
+import { directionMap, tickInterval } from "./constants.js";
 import { GameState } from "./gameState.js";
 import { movePlayer } from "./playerMove.js";
+import { Point } from "./point.js";
+import { animateArrow } from "./arrowMove.js";
+import { animateRock } from "./rockMove.js";
 
 export function runGame(canvas, ctx, scoreSpan, restartButton) {
   let state = GameState.initialize(readStaticMap(), canvas);
 
   const setState = (stateChangeFn) => {
-    state = stateChangeFn(state);
+    const newState = stateChangeFn(state);
+    state = handleProximityAnimation(setState, state, newState);
     console.log("state: ", state);
     drawGame(state);
     scoreSpan.textContent = state.player.score;
@@ -66,3 +70,36 @@ const handleMovement = (setState) => (type, commandType) => {
   };
   directionTable[commandType]();
 };
+
+/**
+ * Animate each of the 3 cardinal directions we were adjacent to previously
+ */
+function handleProximityAnimation(setState, oldState, newState) {
+  const direction = Point.of(newState.player).subtract(oldState.player);
+  if (direction.isZero()) {
+    return newState;
+  }
+
+  const oldNeighbors = newState.sprites
+    .getNeighbors(oldState.player)
+    .filter((s) => !Point.of(s).equals(newState.player));
+  const animateQueue = R.concat(
+    newState.animateQueue,
+    oldNeighbors.filter((s) => s.isMobile),
+  );
+  if (animateQueue.length > 0) {
+    setTimeout(() => runAnimationQueue(setState, animateQueue), tickInterval);
+  }
+  return newState.copy({ animateQueue });
+}
+
+function runAnimationQueue(setState, animateQueue) {
+  animateQueue.forEach((sprite) => {
+    if (sprite.isRock()) {
+      animateRock(setState, sprite);
+    }
+    if (sprite.isArrow()) {
+      animateArrow(setState, sprite);
+    }
+  });
+}
