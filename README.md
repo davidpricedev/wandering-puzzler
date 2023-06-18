@@ -1,9 +1,10 @@
 # Vagabond
 
-Inspired by an old puzzle game from the 1980s - probably [this](https://github.com/sshipway/wanderer).
-Which is apparently itself a clone of sorts of an older game called Boulder Dash
+Inspired by an old puzzle game from 1988 called Wanderer which was available on Amiga.
+I believe [this](https://github.com/sshipway/wanderer) is the source code for that game?
+Apparently Wanderer was a clone of sorts of an older game called Boulder Dash
 
-My first foray into canvas, and my first game.
+This game is my first attempt to work with html canvas and my first attempt at any sort of game.
 
 ## Puzzle components
 
@@ -12,7 +13,7 @@ My first foray into canvas, and my first game.
   - removed from the map (and placed into player inventory) when player moves over it
 - Arrow
   - generally moves horizontally
-  - will start moving (if possible) on the move/turn after a player moves into an adjascent space (or an adjascent item moves) or the item
+  - will start moving (if possible) on the move/turn after a player moves into an adjacent space (or an adjacent item moves) or the item
   - will end the game if the pointy end intercepts player
   - will be stopped by any static item (landmine, wall, diamond)
   - will be redirected up/down one step when encountering an angled wall
@@ -23,7 +24,7 @@ My first foray into canvas, and my first game.
   - will end the game if the player walks into it
 - Rock
   - generally moves vertically down (i.e. obeys gravity)
-  - will start moving (if possible) on the move/turn after a player moves into an adjascent space (or an adjascent item moves) or the item the rock was resting is removed
+  - will start moving (if possible) on the move/turn after a player moves into an adjacent space (or an adjacent item moves) or the item the rock was resting is removed
   - will end the game if it lands on the player
   - will be redirected one step to left/right by angled wall
   - will move down diagonally if possible when obeying gravity - but only when not sitting on top of a wall
@@ -50,10 +51,10 @@ Rules:
 Goals:
 
 - Should be 100% deterministic
-  - Requires that movement/animation to be run in a consistent order (i.e. when a moving arrow/rock triggers adjascent rock/arrow movements)
+  - Requires that movement/animation to be run in a consistent order (i.e. when a moving arrow/rock triggers adjacent rock/arrow movements)
   - Rocks that fall down a slope must prefer to roll left before right (or vice-versa)
 - Should be able to support several different maps/levels
-  - Start with simple text file for maps with particular characters for each item (i.e. `.` for space, `#` for wall,`>` or `<` for arrow, etc.)
+  - Start with simple text file for maps with particular characters for each item (i.e. `#` for wall,`>` or `<` for arrow, etc.)
   - Allow for arbitrarily large/small maps
 - Future expansions
   - Add additional features later (there is a monster that moves towards the player, A teleporter that moves player back or forth from another position on the map, and probably other things)
