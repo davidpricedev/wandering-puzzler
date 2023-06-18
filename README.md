@@ -71,3 +71,10 @@ Dependencies:
 
 - ramda - for all functional programming needs
 - dataclass - a simple immutable dataclass implementation for javascript
+
+Running:
+
+- install node
+- clone the repo
+- run `npm install`
+- run `npm start`
