@@ -1,6 +1,6 @@
 import * as R from "ramda";
-import { directionMap, fastTickInterval, tickInterval } from "./constants";
-import { vectorAdd } from "./util";
+import { fastTickInterval, tickInterval } from "./constants";
+import { Point } from "./point";
 
 export function handleRockCollision({
   setState,
@@ -15,42 +15,51 @@ export function handleRockCollision({
     return oldState;
   }
 
-  const { sprites } = oldState;
-  const newRockPosition = vectorAdd(collidingSprite, command);
+  const { sprites, neighbors } = oldState;
+  const newRockPosition = Point.of(collidingSprite).add(command);
   if (sprites.getAt(newRockPosition)) {
     // rock can't move into a space occupied by another sprite
     return oldState;
   }
 
-  const newRock = { ...collidingSprite, ...newRockPosition };
+  const newRock = collidingSprite.moveTo(newRockPosition);
   const newSprites = sprites.move(collidingSprite, newRockPosition);
 
   setTimeout(() => animateRock(setState, newRock), fastTickInterval);
 
   return oldState.copy({
+    neighbors: newSprites.getNeighbors(newRock),
     player: newPlayer,
     sprites: newSprites,
+    animateQueue: neighbors.filter((s) => s.isMobile),
   });
 }
 
-function canFall(sprite, sprites) {
-  const downleft = { type: "move", direction: "downleft", x: -1, y: 1 };
-  const downright = { type: "move", direction: "downright", x: +1, y: 1 };
+function getFallDirection(sprite, sprites) {
+  const down = Point.of({ x: 0, y: 1 });
+  const downleft = Point.of({ x: -1, y: 1 });
+  const downright = Point.of({ x: 1, y: 1 });
 
-  const downSprite = sprites.getAt(vectorAdd(sprite, directionMap.down));
+  const downSprite = sprites.getAt(down.add(sprite));
   if (!downSprite) {
-    return directionMap.down;
+    return down;
   }
 
   if (downSprite.spriteType === "wall") {
     return false;
   }
 
-  if (!sprites.getAt(vectorAdd(sprite, downleft))) {
+  if (
+    !sprites.getAt(downleft.add(sprite)) &&
+    downSprite.spriteType !== "leftLeanWall"
+  ) {
     return downleft;
   }
 
-  if (!sprites.getAt(vectorAdd(sprite, downright))) {
+  if (
+    !sprites.getAt(downright.add(sprite)) &&
+    downSprite.spriteType !== "rightLeanWall"
+  ) {
     return downright;
   }
 
@@ -58,19 +67,32 @@ function canFall(sprite, sprites) {
 }
 
 /** Once we've started a rock moving it moves on its own until it can't move anymore */
-function animateRock(setState, rock) {
+export function animateRock(setState, rock) {
+  console.log("animateRock: ", rock);
   setState((oldState) => {
-    console.log("animating before state: ", oldState);
-    const { sprites } = oldState;
-    if (sprites.getAt(vectorAdd(rock, directionMap.down))) {
-      return oldState;
+    const { sprites, player, animateQueue } = oldState;
+    const fallDirection = getFallDirection(rock, sprites);
+    const queueWithoutRock = animateQueue.filter((s) => !s.equals(rock));
+    if (!fallDirection) {
+      return oldState.copy({
+        animateQueue: queueWithoutRock,
+      });
     }
 
-    const newRockPos = vectorAdd(rock, directionMap.down);
-    const newRock = { ...rock, ...newRockPos };
+    const newRockPos = Point.of(rock).add(fallDirection);
+    const newRock = rock.moveTo(newRockPos);
+    if (newRockPos.equals(player)) {
+      return oldState.copy({
+        animateQueue: queueWithoutRock,
+        gameOver: true,
+        gameOverReason: "You were crushed by a rock",
+      });
+    }
+
     setTimeout(() => animateRock(setState, newRock), tickInterval);
     return oldState.copy({
       sprites: sprites.move(rock, newRockPos),
+      animateQueue: R.concat(queueWithoutRock, [newRock]),
     });
   });
 }

@@ -43,3 +43,10 @@ export const getCanvasOffset = (canvas, centerX, centerY) => ({
     height: gridSize,
   }),
 });
+
+export const center = (canvas) => {
+  return {
+    x: canvas.width / 2,
+    y: canvas.height / 2,
+  };
+};

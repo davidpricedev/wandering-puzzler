@@ -1,18 +1,18 @@
 import * as R from "ramda";
 import { drawGrid, drawCenterLine } from "./grid.js";
 import { drawGrass, drawGameOver } from "./framing.js";
-import { vectorAdd, getNeighboringSprites } from "./util.js";
 import { readStaticMap } from "./map.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap } from "./constants.js";
-import { handleRockCollision } from "./rockMove.js";
 import { GameState } from "./gameState.js";
+import { movePlayer } from "./playerMove.js";
 
 export function runGame(canvas, ctx, scoreSpan, restartButton) {
   let state = GameState.initialize(readStaticMap(), canvas);
 
   const setState = (stateChangeFn) => {
     state = stateChangeFn(state);
+    console.log("state: ", state);
     drawGame(state);
     scoreSpan.textContent = state.player.score;
   };
@@ -20,7 +20,7 @@ export function runGame(canvas, ctx, scoreSpan, restartButton) {
   keyboardSetup();
   drawGame(state);
   const removeSubscription = subscribe(handleKeys(handleMovement(setState)));
-  restartButton.onclick = () => restartGame(setState);
+  restartButton.onclick = restartGame(setState);
 }
 
 function drawGame({
@@ -45,69 +45,24 @@ function drawGame({
   }
 }
 
+const restartGame = (setState) => () => {
+  setState((old) => GameState.initialize(readStaticMap(), old.canvas));
+};
+
 const handleMovement = (setState) => (type, commandType) => {
   if (type !== "keydown") {
     return;
   }
 
   const direction = directionMap[commandType];
+  const handleMove = () =>
+    setState((old) => movePlayer(old, setState, direction));
   const directionTable = {
-    restart: () => restartGame(setState),
-    up: () => movePlayer(setState, direction),
-    down: () => movePlayer(setState, direction),
-    left: () => movePlayer(setState, direction),
-    right: () => movePlayer(setState, direction),
+    restart: restartGame(setState),
+    up: handleMove,
+    down: handleMove,
+    left: handleMove,
+    right: handleMove,
   };
   directionTable[commandType]();
 };
-
-function restartGame(setState) {
-  setState((oldState) =>
-    GameState.initialize(readStaticMap(), oldState.canvas),
-  );
-}
-
-function movePlayer(setState, command) {
-  setState((oldState) => {
-    const { player, sprites, gameOver } = oldState;
-    if (gameOver) {
-      return oldState;
-    }
-
-    const newPosition = vectorAdd(player, command);
-    const newPlayer = player.moveTo(newPosition);
-    const newNeighbors = getNeighboringSprites(newPlayer, oldState.sprites);
-    const collidingSprite = sprites.getAt(newPlayer);
-    if (collidingSprite && collidingSprite.impassible) {
-      return oldState;
-    }
-    if (collidingSprite && collidingSprite.canBeTrampled) {
-      console.log("newScore: ", newPlayer.score + collidingSprite.score);
-      return oldState.copy({
-        sprites: sprites.removeAt(newPlayer),
-        player: newPlayer.addScore(collidingSprite.score),
-      });
-    }
-    if (collidingSprite && collidingSprite.death) {
-      return oldState.copy({
-        player: newPlayer,
-        neighbors: newNeighbors,
-        gameOver: true,
-        gameOverReason: collidingSprite.gameOverReason,
-      });
-    }
-    if (collidingSprite && collidingSprite.spriteType === "rock") {
-      return handleRockCollision({
-        setState,
-        oldState,
-        newPlayer,
-        collidingSprite,
-        command,
-      });
-    }
-    return oldState.copy({
-      player: newPlayer,
-      neighbors: newNeighbors,
-    });
-  });
-}

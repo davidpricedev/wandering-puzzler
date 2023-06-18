@@ -14,17 +14,20 @@ export class GameState extends Data {
   gameOver = false;
   gameOverReason = "";
   neighbors = null;
+  animateQueue = [];
 
   static initialize(mapData, canvas) {
     const { sprites: allSprites, width: mapWidth, height: mapHeight } = mapData;
-    const [[player], sprites] = R.partition(
+    const [[player], spriteList] = R.partition(
       (x) => x.spriteType === "player",
       allSprites,
     );
+    const sprites = SpriteCollection.fromSprites(spriteList);
     const canvasOffset = getCanvasOffset(canvas, player.x, player.y);
     return GameState.create({
       player,
-      sprites: SpriteCollection.fromSprites(sprites),
+      sprites,
+      neighbors: sprites.getNeighbors(player),
       canvas,
       ctx: canvas.getContext("2d"),
       canvasOffset,

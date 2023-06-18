@@ -15,3 +15,14 @@ export const directionMap = {
 export const tickInterval = 250;
 
 export const fastTickInterval = 100;
+
+export const charToType = {
+  "#": "wall",
+  P: "player",
+  S: "shrubbery",
+  L: "lava",
+  C: "coin",
+  "/": "rightLeanWall",
+  "\\": "leftLeanWall",
+  B: "rock",
+};
