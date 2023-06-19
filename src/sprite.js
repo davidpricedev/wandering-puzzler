@@ -68,7 +68,7 @@ const drawSquare = (ctx, canvasOffset, sprite) => {
   ctx.fillText(char, x + width * 0.5, y + height * 0.85);
 };
 
-const drawImage = (ctx, canvasOffset, image, sprite) => {
+export const drawImage = (ctx, canvasOffset, image, sprite) => {
   const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
   ctx.drawImage(
     image, // 0, 0, image.width, image.height,
@@ -113,7 +113,7 @@ const attributesMap = {
   cactus: {
     color: "orange",
     death: true,
-    gameOverReason: "Someone set us up the bomb!",
+    gameOverReason: "You got too close to a bomb!",
     allowedFlows: [],
   },
   coin: {
@@ -138,8 +138,15 @@ function drawWallTile(ctx, canvasOffset, assets, sprite) {
 }
 
 function drawLeftArrowTile(ctx, canvasOffset, assets, sprite) {
+  const scaley = 1 / 3;
   const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
-  ctx.drawImage(assets.arrow, x, y + height / 3, width, height / 3);
+  ctx.drawImage(
+    assets.arrow,
+    x,
+    y + height * (0.5 - scaley / 2),
+    width,
+    height * scaley,
+  );
 }
 
 function drawRightArrowTile(ctx, canvasOffset, assets, sprite) {

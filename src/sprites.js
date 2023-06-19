@@ -47,4 +47,10 @@ export class SpriteCollection extends Data {
       .map((d) => this.getAt(Point.of(pos).add(d)))
       .filter(R.identity);
   }
+
+  filterToViewport(viewport) {
+    return SpriteCollection.fromSprites(
+      this.sprites.filter((s) => viewport.containsPoint(s)),
+    );
+  }
 }

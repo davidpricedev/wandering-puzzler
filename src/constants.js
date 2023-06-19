@@ -1,7 +1,7 @@
 export const gridSize = 50;
 
 // export const gridColor = "#027102";
-export const gridColor = "rgb(0, 0, 0, .02)";
+export const gridColor = "rgb(0, 0, 0, .2)";
 
 export const grassColor = "#047304";
 
@@ -18,13 +18,19 @@ export const fastTickInterval = 0;
 
 export const charToType = {
   "#": "wall",
-  P: "player",
-  S: "shrubbery",
-  L: "cactus",
-  C: "coin",
+  "@": "player",
+  ":": "shrubbery",
+  "!": "cactus",
+  "*": "coin",
   "/": "rightLeanWall",
   "\\": "leftLeanWall",
-  B: "rock",
+  O: "rock",
   ">": "rightArrow",
   "<": "leftArrow",
+  X: "flag",
+};
+
+export const charAliases = {
+  "=": "#",
+  "-": "#",
 };

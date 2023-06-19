@@ -1,22 +1,34 @@
 import * as R from "ramda";
 import { drawGrid, drawCenterLine } from "./grid.js";
-import { drawGrass, drawGameOver, drawBusy } from "./framing.js";
-import { readStaticMap } from "./map.js";
+import {
+  drawGrass,
+  drawGameOver,
+  drawBusy,
+  drawCanvasViewport,
+  getCanvasOffset,
+} from "./framing.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap, tickInterval } from "./constants.js";
 import { GameState } from "./gameState.js";
 import { movePlayer } from "./playerMove.js";
-import { Point } from "./point.js";
+import { Box, Point } from "./point.js";
 import { animateArrow } from "./arrowMove.js";
 import { animateRock } from "./rockMove.js";
+import { inspect } from "./util";
 
 export async function runGame(canvas, scoreSpan, restartButton) {
   const assets = await loadAssets();
-  let state = GameState.initialize(readStaticMap(), canvas, assets);
+  let state = GameState.initialize("wanderer-1", canvas, assets);
 
   const setState = (stateChangeFn) => {
-    const newState = stateChangeFn(state);
-    state = handleProximityAnimation(setState, state, newState);
+    state = R.pipe(
+      stateChangeFn,
+      inspect("stateChangeFn"),
+      handleProximityAnimation(setState, state),
+      inspect("handleProximityAnimation"),
+      handleMovingViewport(setState, state),
+      inspect("handleMovingViewport"),
+    )(state);
     console.log("state: ", state);
     drawGame(state);
     scoreSpan.textContent = state.player.score;
@@ -40,23 +52,35 @@ function drawGame({
   gameOverReason,
   assets,
   animateQueue,
+  mapViewport,
 }) {
   ctx.reset();
   drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
   drawGrid(ctx, canvasOffset);
-  sprites.forEach((sprite) => sprite.draw(ctx, canvasOffset, assets));
+  sprites
+    .filterToViewport(mapViewport)
+    .forEach((s) => s.draw(ctx, canvasOffset, assets));
+  drawCanvasViewport(ctx, canvasOffset.canvasViewport);
+  console.log("canvasoffset: ", canvasOffset);
   player.draw(ctx, canvasOffset, assets);
+  drawCenterLine(ctx, canvasOffset);
   if (animateQueue.length > 0) {
     drawBusy(ctx, canvas);
   }
   if (gameOver) {
     drawGameOver(ctx, canvas, gameOverReason, player.score);
   }
+  ctx.strokeStyle = "white";
+  console.log("canvas size: ", canvas.width, canvas.height);
+  console.log("map viewport: ", mapViewport);
+  const vps = mapViewport.scale(canvasOffset.gridSize);
+  console.log("vps: ", mapViewport, canvasOffset.gridSize, vps);
+  ctx.strokeRect(vps.left, vps.top, vps.width(), vps.height());
 }
 
 const restartGame = (setState) => () => {
   setState((old) =>
-    GameState.initialize(readStaticMap(), old.canvas, old.assets),
+    GameState.initialize(old.levelName, old.canvas, old.assets),
   );
 };
 
@@ -78,10 +102,34 @@ const handleMovement = (setState) => (type, commandType) => {
   directionTable[commandType]();
 };
 
+const handleMovingViewport = (setState, oldState) => (newState) => {
+  const { player, mapViewport: mv, canvas } = newState;
+  console.log("viewPort: ", newState.mapViewport);
+  if (
+    player.x - mv.left < 2 ||
+    mv.right - player.x < 3 ||
+    player.y - mv.top < 2 ||
+    mv.bottom - player.y < 3
+  ) {
+    const newCanvasOffset = getCanvasOffset(canvas, player.x, player.y);
+    const newMapViewport = Box.fromCenter(
+      Point.of(player),
+      newCanvasOffset.mapWidth / 2,
+      newCanvasOffset.mapHeight / 2,
+    );
+    console.log("newViewport: ", newMapViewport);
+    return newState.copy({
+      canvasOffset: newCanvasOffset,
+      mapViewport: newMapViewport,
+    });
+  }
+  return newState;
+};
+
 /**
  * Animate each of the 3 cardinal directions we were adjacent to previously
  */
-function handleProximityAnimation(setState, oldState, newState) {
+const handleProximityAnimation = (setState, oldState) => (newState) => {
   const direction = Point.of(newState.player).subtract(oldState.player);
   if (direction.isZero()) {
     return newState;
@@ -98,7 +146,7 @@ function handleProximityAnimation(setState, oldState, newState) {
     setTimeout(() => runAnimationQueue(setState, animateQueue), tickInterval);
   }
   return newState.copy({ animateQueue });
-}
+};
 
 function runAnimationQueue(setState, animateQueue) {
   animateQueue.forEach((sprite) => {

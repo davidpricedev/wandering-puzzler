@@ -2,28 +2,28 @@ import * as R from "ramda";
 import { gridColor } from "./constants";
 
 export function drawGrid(ctx, canvasOffset) {
-  const {
-    x: canvasOffsetX,
-    y: canvasOffsetY,
-    gridSize,
-    canvasWidth,
-    canvasHeight,
-  } = canvasOffset;
-  const offsetX = canvasOffsetX % gridSize;
-  const offsetY = canvasOffsetY % gridSize;
+  const { cx, cy, gridSize, canvasWidth, canvasHeight } = canvasOffset;
+  const halfGridSize = gridSize / 2;
+  const offsetX = (cx - halfGridSize) % gridSize;
+  const offsetY = (cy - halfGridSize) % gridSize;
+  console.log("offsets for grid: ", offsetX, offsetY, gridSize);
   R.range(0, canvasHeight / gridSize + 1).forEach((i) => {
+    // horizontal
+    const y = i * gridSize + offsetY; // - halfGridSize;
     drawLine({
       ctx,
-      start: { x: 0, y: i * gridSize - offsetY },
-      end: { x: canvasWidth, y: i * gridSize - offsetY },
+      start: { x: 0, y },
+      end: { x: canvasWidth, y },
       color: gridColor,
     });
   });
   R.range(0, canvasWidth / gridSize + 1).forEach((j) => {
+    // vertical
+    const x = j * gridSize + offsetX; // - halfGridSize;
     drawLine({
       ctx,
-      start: { x: j * gridSize - offsetX, y: 0 },
-      end: { x: j * gridSize - offsetX, y: canvasHeight },
+      start: { x, y: 0 },
+      end: { x, y: canvasHeight },
       color: gridColor,
     });
   });
