@@ -46,19 +46,17 @@ function drawGame({
   canvas,
   ctx,
   canvasOffset,
-  mapWidth,
-  mapHeight,
+  mapBounds,
   gameOver,
   gameOverReason,
   assets,
   animateQueue,
-  mapViewport,
 }) {
   ctx.reset();
-  drawGrass(ctx, canvasOffset, mapWidth, mapHeight);
+  drawGrass(ctx, canvasOffset, mapBounds);
   drawGrid(ctx, canvasOffset);
   sprites
-    .filterToViewport(mapViewport)
+    .filterToViewport(canvasOffset.mapViewport)
     .forEach((s) => s.draw(ctx, canvasOffset, assets));
   drawCanvasViewport(ctx, canvasOffset.canvasViewport);
   console.log("canvasoffset: ", canvasOffset);
@@ -70,12 +68,6 @@ function drawGame({
   if (gameOver) {
     drawGameOver(ctx, canvas, gameOverReason, player.score);
   }
-  ctx.strokeStyle = "white";
-  console.log("canvas size: ", canvas.width, canvas.height);
-  console.log("map viewport: ", mapViewport);
-  const vps = mapViewport.scale(canvasOffset.gridSize);
-  console.log("vps: ", mapViewport, canvasOffset.gridSize, vps);
-  ctx.strokeRect(vps.left, vps.top, vps.width(), vps.height());
 }
 
 const restartGame = (setState) => () => {
@@ -103,26 +95,27 @@ const handleMovement = (setState) => (type, commandType) => {
 };
 
 const handleMovingViewport = (setState, oldState) => (newState) => {
-  const { player, mapViewport: mv, canvas } = newState;
-  console.log("viewPort: ", newState.mapViewport);
+  const { player, canvas, canvasOffset } = newState;
+  const { mapViewport: mv } = canvasOffset;
+
+  // prevent user from wandering off the map
+  if (!mv.containsPoint(player)) {
+    return oldState;
+  }
+
+  // recenter the map viewport on the player when the player is near the edge
   if (
-    player.x - mv.left < 2 ||
-    mv.right - player.x < 3 ||
-    player.y - mv.top < 2 ||
-    mv.bottom - player.y < 3
+    player.x - mv.left < 1 ||
+    mv.right - player.x < 2 ||
+    player.y - mv.top < 1 ||
+    mv.bottom - player.y < 2
   ) {
     const newCanvasOffset = getCanvasOffset(canvas, player.x, player.y);
-    const newMapViewport = Box.fromCenter(
-      Point.of(player),
-      newCanvasOffset.mapWidth / 2,
-      newCanvasOffset.mapHeight / 2,
-    );
-    console.log("newViewport: ", newMapViewport);
     return newState.copy({
       canvasOffset: newCanvasOffset,
-      mapViewport: newMapViewport,
     });
   }
+
   return newState;
 };
 

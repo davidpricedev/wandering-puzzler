@@ -2,7 +2,7 @@ import * as R from "ramda";
 import { Data } from "dataclass";
 import { getCanvasOffset } from "./framing";
 import { SpriteCollection } from "./sprites";
-import { parseMap } from "./map";
+import { Map } from "./map";
 import { LEVELS } from "./maps";
 import { Point, Box } from "./point";
 export class GameState extends Data {
@@ -11,8 +11,7 @@ export class GameState extends Data {
   canvas = null;
   ctx = null;
   canvasOffset = null;
-  mapWidth = 0;
-  mapHeight = 0;
+  mapBounds = null;
   gameOver = false;
   gameOverReason = "";
   animateQueue = [];
@@ -21,22 +20,21 @@ export class GameState extends Data {
   levelComplete = false;
   levelComment = "";
   maxScore = 0;
-  mapViewport = null;
 
   static initialize(levelName, canvas, assets) {
-    const mapData = parseMap(LEVELS[levelName]);
-    const { sprites: allSprites, width, height, maxScore, comment } = mapData;
+    const mapData = Map.parse(LEVELS[levelName]);
+    const {
+      sprites: allSprites,
+      bounds: mapBounds,
+      maxScore,
+      comment,
+    } = mapData;
     const [[player], spriteList] = R.partition(
       (x) => x.spriteType === "player",
       allSprites,
     );
     const sprites = SpriteCollection.fromSprites(spriteList);
     const canvasOffset = getCanvasOffset(canvas, player.x, player.y);
-    const mapViewport = Box.fromCenter(
-      Point.of(player),
-      canvasOffset.mapWidth / 2,
-      canvasOffset.mapHeight / 2,
-    );
     return GameState.create({
       levelName,
       player,
@@ -44,12 +42,10 @@ export class GameState extends Data {
       canvas,
       ctx: canvas.getContext("2d"),
       canvasOffset,
-      mapWidth: width,
-      mapHeight: height,
+      mapBounds,
       assets,
       maxScore,
       levelComment: comment,
-      mapViewport,
     });
   }
 }

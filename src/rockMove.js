@@ -78,10 +78,10 @@ function getFallDirection(sprite, sprites) {
 export function animateRock(setState, rock) {
   console.log("animateRock: ", rock);
   setState((oldState) => {
-    const { sprites, player, animateQueue } = oldState;
+    const { sprites, player, animateQueue, mapBounds } = oldState;
     const fallDirection = getFallDirection(rock, sprites);
     const queueWithoutRock = animateQueue.filter((s) => !s.equals(rock));
-    if (!fallDirection) {
+    if (!fallDirection || !mapBounds.containsPoint(fallDirection.add(rock))) {
       console.log("cleaning up rock", rock, queueWithoutRock);
       return oldState.copy({
         animateQueue: queueWithoutRock,

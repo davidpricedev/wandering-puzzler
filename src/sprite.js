@@ -1,6 +1,6 @@
 import * as R from "ramda";
 import { Data } from "dataclass";
-import { charToType } from "./constants";
+import { charToType, wallColor } from "./constants";
 import { Point } from "./point";
 
 export class Sprite extends Data {
@@ -80,7 +80,7 @@ export const drawImage = (ctx, canvasOffset, image, sprite) => {
 };
 
 const wallAttributes = {
-  color: "grey",
+  color: wallColor,
   impassible: true,
   allowedFlows: [],
   drawSprite: drawLeaningWallTile,
@@ -182,12 +182,14 @@ function getLeaningWallImage(spriteType, scale, image) {
   scratch.width = scale;
   scratch.height = scale;
   const ctx = scratch.getContext("2d");
-  ctx.fillStyle = "grey";
+  ctx.fillStyle = wallColor;
   ctx.translate(scale / 2, scale / 2);
   ctx.rotate(spriteType === "leftLeanWall" ? -Math.PI / 4 : Math.PI / 4);
   ctx.translate(-scale / 2, -scale / 2);
-  ctx.fillRect(0 + (scale * 3) / 8, -50, scale / 4, scale + 300);
-  ctx.drawImage(image, 0, 0, scale, scale);
+  const x = (scale * 3) / 8;
+  const w = scale / 4;
+  ctx.fillRect(x, -50, w, scale + 300);
+  ctx.drawImage(image, x, -50, w, scale + 300);
   ctx.restore();
   return scratch;
 }

@@ -66,10 +66,13 @@ function getFlightDirection(sprite, sprites) {
 export function animateArrow(setState, arrow) {
   console.log("animateArrow: ", arrow);
   setState((oldState) => {
-    const { sprites, player, animateQueue } = oldState;
+    const { sprites, player, animateQueue, mapBounds } = oldState;
     const flightDirection = getFlightDirection(arrow, sprites);
     const queueWithoutArrow = animateQueue.filter((s) => !s.equals(arrow));
-    if (!flightDirection) {
+    if (
+      !flightDirection ||
+      !mapBounds.containsPoint(flightDirection.add(arrow))
+    ) {
       console.log("cleaning up arrow", arrow, queueWithoutArrow);
       return oldState.copy({
         animateQueue: queueWithoutArrow,

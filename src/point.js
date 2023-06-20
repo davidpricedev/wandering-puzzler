@@ -120,7 +120,16 @@ export class Box extends Data {
     return Point.of({ x: this.right, y: this.bottom });
   }
 
-  containsPoint(point) {
+  containsPoint(point, includeBREdge = false) {
+    if (includeBREdge) {
+      return (
+        point.x >= this.left &&
+        point.x <= this.right &&
+        point.y >= this.top &&
+        point.y <= this.bottom
+      );
+    }
+
     return (
       point.x >= this.left &&
       point.x < this.right &&

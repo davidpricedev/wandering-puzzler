@@ -3,10 +3,23 @@ import { grassColor } from "./constants";
 import { Point, Box } from "./point";
 import { drawLine } from "./grid";
 
-export const drawGrass = (ctx, canvasOffset, mapWidth, mapHeight) => {
+export const drawGrass = (ctx, canvasOffset, mapBounds) => {
   ctx.fillStyle = grassColor;
-  const { canvasViewport: cv } = canvasOffset;
-  ctx.fillRect(cv.left, cv.top, cv.width(), cv.height());
+  const { canvasViewport: cv, mapViewport: mv, offset } = canvasOffset;
+  const { x: tlx, y: tly } = canvasOffset.translateAndScale({
+    x: Math.max(0, mv.left),
+    y: Math.max(0, mv.top),
+  });
+  const { x: brx, y: bry } = canvasOffset.translateAndScale({
+    x: Math.min(mapBounds.width(), mv.right + 1),
+    y: Math.min(mapBounds.height(), mv.bottom + 1),
+  });
+  ctx.fillRect(
+    Math.max(tlx, cv.left),
+    Math.max(tly, cv.top),
+    Math.min(brx - tlx, cv.width()),
+    Math.min(bry - tly, cv.height()),
+  );
 };
 
 export function drawGameOver(ctx, canvas, reason, score) {
@@ -41,6 +54,15 @@ export const getCanvasOffset = (canvas, centerX, centerY) => {
   const center = getCenter(canvas);
   const gridSize = getGridSize(canvas);
   const canvasViewport = getCanvasViewport(canvas);
+  const mapWidth = canvasViewport.width() / gridSize;
+  const mapHeight = canvasViewport.height() / gridSize;
+  const mapViewport = Box.fromCenter(
+    Point.of({ x: centerX, y: centerY }),
+    Math.floor(mapWidth / 2),
+    Math.floor(mapHeight / 2),
+  );
+  const offsetX = (centerX - gridSize / 2) % gridSize;
+  const offsetY = (centerY - gridSize / 2) % gridSize;
   return {
     center,
     gridSize,
@@ -49,11 +71,11 @@ export const getCanvasOffset = (canvas, centerX, centerY) => {
     canvasWidth: canvas.width,
     canvasHeight: canvas.height,
     canvasViewport,
-    mapWidth: canvasViewport.width() / gridSize,
-    mapHeight: canvasViewport.height() / gridSize,
+    mapViewport,
+    offset: Point.of({ x: offsetX, y: offsetY }),
     translateAndScale: ({ x, y }) => ({
-      x: (x - centerX - 0.5) * gridSize + canvas.width / 2,
-      y: (y - centerY - 0.5) * gridSize + canvas.height / 2,
+      x: Math.floor((x - centerX - 0.5) * gridSize + canvas.width / 2),
+      y: Math.floor((y - centerY - 0.5) * gridSize + canvas.height / 2),
       width: gridSize,
       height: gridSize,
     }),
@@ -68,6 +90,7 @@ export const getCenter = (canvas) =>
 
 // Original game is 11 x 7, so we'll aim for that while staying square
 export const getGridSize = (canvas) =>
+  //Math.min(Math.floor(canvas.width / 40), Math.floor(canvas.height / 40));
   Math.min(Math.floor(canvas.width / 11), Math.floor(canvas.height / 7));
 
 export const getCanvasViewport = (canvas) => {

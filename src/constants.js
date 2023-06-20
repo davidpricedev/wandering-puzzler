@@ -4,6 +4,7 @@ export const gridSize = 50;
 export const gridColor = "rgb(0, 0, 0, .2)";
 
 export const grassColor = "#047304";
+export const wallColor = "#444";
 
 export const directionMap = {
   up: { type: "move", direction: "up", x: 0, y: -1 },
@@ -27,7 +28,7 @@ export const charToType = {
   O: "rock",
   ">": "rightArrow",
   "<": "leftArrow",
-  X: "flag",
+  X: "exit",
 };
 
 export const charAliases = {

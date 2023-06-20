@@ -4,12 +4,16 @@ import { Point } from "./point.js";
 import { animateArrow, handleArrowCollision } from "./arrowMove.js";
 
 export function movePlayer(oldState, setState, command) {
-  const { player, sprites, gameOver, animateQueue, neighbors } = oldState;
+  const { player, sprites, gameOver, animateQueue, mapBounds } = oldState;
   if (gameOver || animateQueue.length > 0) {
     return oldState;
   }
 
   const newPlayer = player.moveTo(Point.of(player).add(command));
+  if (!mapBounds.containsPoint(newPlayer)) {
+    return oldState;
+  }
+
   const collidingSprite = sprites.getAt(newPlayer);
   if (collidingSprite && collidingSprite.impassible) {
     return oldState;
