@@ -26,9 +26,11 @@ export class GameState extends Data {
   levelComment = "";
   maxScore = 0;
   zoom = null;
+  levelNumber = 0;
 
-  static initialize(levelName, canvas, assets) {
-    const mapData = Map.parse(LEVELS[levelName]);
+  static initialize(levelNumber, canvas, assets) {
+    const { name: levelName, map: mapString } = LEVELS[levelNumber];
+    const mapData = Map.parse(mapString);
     const {
       sprites: allSprites,
       bounds: mapBounds,
@@ -60,6 +62,7 @@ export class GameState extends Data {
       maxScore,
       levelComment: comment,
       zoom,
+      levelNumber,
     });
   }
 }

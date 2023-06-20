@@ -9,7 +9,6 @@ export function handleRockCollision({
   collidingSprite,
   command,
 }) {
-  console.log("command: ", command);
   if (["up", "down"].includes(command.direction)) {
     // player can't push rock up or down
     return oldState;
@@ -43,18 +42,6 @@ function getFallDirection(sprite, sprites) {
     return down;
   }
 
-  console.log("downSprite.allowedFlows: ", downSprite.allowedFlows);
-  console.log(
-    "can downLeft: ",
-    downSprite.allowedFlows.includes(downleft),
-    Point.arrayInclues(downleft, downSprite.allowedFlows),
-  );
-  console.log(
-    "can downRight: ",
-    downSprite.allowedFlows.includes(downright),
-    Point.arrayInclues(downright, downSprite.allowedFlows),
-  );
-
   if (
     !sprites.getAt(downleft.add(sprite)) &&
     !sprites.getAt(Point.left().add(sprite)) &&
@@ -76,13 +63,11 @@ function getFallDirection(sprite, sprites) {
 
 /** Once we've started a rock moving it moves on its own until it can't move anymore */
 export function animateRock(setState, rock) {
-  console.log("animateRock: ", rock);
   setState((oldState) => {
     const { sprites, player, animateQueue, mapBounds } = oldState;
     const fallDirection = getFallDirection(rock, sprites);
     const queueWithoutRock = animateQueue.filter((s) => !s.equals(rock));
     if (!fallDirection || !mapBounds.containsPoint(fallDirection.add(rock))) {
-      console.log("cleaning up rock", rock, queueWithoutRock);
       return oldState.copy({
         animateQueue: queueWithoutRock,
       });

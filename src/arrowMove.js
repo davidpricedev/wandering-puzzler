@@ -64,7 +64,6 @@ function getFlightDirection(sprite, sprites) {
 
 /** Once we've started a arrow moving it moves on its own until it can't move anymore */
 export function animateArrow(setState, arrow) {
-  console.log("animateArrow: ", arrow);
   setState((oldState) => {
     const { sprites, player, animateQueue, mapBounds } = oldState;
     const flightDirection = getFlightDirection(arrow, sprites);
@@ -73,7 +72,6 @@ export function animateArrow(setState, arrow) {
       !flightDirection ||
       !mapBounds.containsPoint(flightDirection.add(arrow))
     ) {
-      console.log("cleaning up arrow", arrow, queueWithoutArrow);
       return oldState.copy({
         animateQueue: queueWithoutArrow,
       });

@@ -17,21 +17,22 @@ import { Box, Point } from "./point.js";
 import { animateArrow } from "./arrowMove.js";
 import { animateRock } from "./rockMove.js";
 import { inspect } from "./util";
+import { LEVELS } from "./maps/index.js";
 
 export async function runGame(canvas, scoreSpan, restartButton) {
   const assets = await loadAssets();
-  let state = GameState.initialize("wanderer-1", canvas, assets);
+  let state = GameState.initialize(0, canvas, assets);
 
   const setState = (stateChangeFn) => {
     state = R.pipe(
       stateChangeFn,
-      inspect("stateChangeFn"),
+      // inspect("stateChangeFn"),
       handleProximityAnimation(setState, state),
-      inspect("handleProximityAnimation"),
+      // inspect("handleProximityAnimation"),
       handleMovingViewport(setState, state),
-      inspect("handleMovingViewport"),
+      // inspect("handleMovingViewport"),
     )(state);
-    console.log("state: ", state);
+    // console.log("state: ", state);
     drawGame(state);
     scoreSpan.textContent = state.player.score;
   };
@@ -64,7 +65,6 @@ function drawGame({
     .filterToViewport(projection.mapViewport)
     .forEach((s) => s.draw(ctx, projection, assets));
   // drawCanvasViewport(ctx, projection.canvasViewport);
-  console.log("projection: ", projection);
   player.draw(ctx, projection, assets);
   // drawCenterLine(ctx, projection);
   if (animateQueue.length > 0) {
@@ -92,7 +92,7 @@ function drawGame({
 
 const restartGame = (setState) => () => {
   setState((old) =>
-    GameState.initialize(old.levelName, old.canvas, old.assets),
+    GameState.initialize(old.levelNumber, old.canvas, old.assets),
   );
 };
 
@@ -118,7 +118,7 @@ const handleMovement = (setState) => (type, commandType) => {
     right: handleMove,
     zoomIn: () => handleZoom(setState, zoomChange.scale(-1)),
     zoomOut: () => handleZoom(setState, zoomChange),
-    space: () => setState((old) => old.copy({ levelStart: false })),
+    space: () => handleSpacebar(setState),
   };
   directionTable[commandType]();
 };
@@ -216,5 +216,15 @@ function handleZoom(setState, direction) {
       zoom,
       projection: old.projection.zoomTo(zoom),
     });
+  });
+}
+
+function handleSpacebar(setState) {
+  setState((old) => {
+    if (old.levelStart) {
+      return old.copy({ levelStart: false });
+    } else if (old.levelComplete && LEVELS.length > old.levelNumber + 1) {
+      return GameState.initialize(old.levelNumber + 1, old.canvas, old.assets);
+    }
   });
 }

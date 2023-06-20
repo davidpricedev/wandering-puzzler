@@ -63,6 +63,11 @@ export function drawLevelComplete({
     canvas.width / 2,
     canvas.height / 2 + 60,
   );
+  ctx.fillText(
+    "press spacebar for next level, esc to try for a better score",
+    canvas.width / 2,
+    canvas.height / 2 + 90,
+  );
 }
 
 export function drawBusy(ctx, canvas) {
@@ -107,7 +112,6 @@ export function drawClampedHorizontalLine({
   if (start.y < bounds.top || start.y > bounds.bottom) return;
   const clampedStart = Point.of(Math.max(start.x, bounds.left), start.y);
   const clampedEnd = Point.of(Math.min(end.x, bounds.right), end.y);
-  console.log("drawing edgeH line: ", clampedStart, clampedEnd, bounds);
   drawLine({ ctx, start: clampedStart, end: clampedEnd, color, width });
 }
 
@@ -123,12 +127,10 @@ export function drawClampedVerticalLine({
   if (start.x < bounds.left || start.x > bounds.right) return;
   const clampedStart = Point.of(start.x, Math.max(start.y, bounds.top));
   const clampedEnd = Point.of(start.x, Math.min(end.y, bounds.bottom));
-  console.log("drawing edgeV line: ", clampedStart, clampedEnd, bounds);
   drawLine({ ctx, start: clampedStart, end: clampedEnd, color, width });
 }
 
 export const drawCanvasViewport = (ctx, cv) => {
-  console.log("drawing cv: ", cv.left, cv.top, cv.width(), cv.height(), cv);
   ctx.strokeStyle = "red";
   ctx.strokeRect(cv.left, cv.top, cv.width(), cv.height());
 };

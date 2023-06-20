@@ -2,19 +2,11 @@ import * as R from "ramda";
 import { gridColor } from "./constants";
 
 export function drawGrid(ctx, projection) {
-  const {
-    cellW,
-    cellH,
-    canvasW,
-    canvasH,
-    canvasViewport: cv,
-    mapViewport: mv,
-  } = projection;
+  const { cellW, cellH, canvasW, canvasH, mapViewport: mv } = projection;
   const { x: offsetX, y: offsetY } = projection.translateAndScale(mv.topLeft());
-  console.log("drawing grid: ", offsetX, offsetY, cv);
   R.range(0, canvasH / cellH + 1).forEach((i) => {
     // horizontal
-    const y = i * cellH + offsetY; // - halfcellSize;
+    const y = i * cellH + offsetY;
     drawLine({
       ctx,
       start: { x: 0, y },
@@ -24,7 +16,7 @@ export function drawGrid(ctx, projection) {
   });
   R.range(0, canvasW / cellW + 1).forEach((j) => {
     // vertical
-    const x = j * cellW + offsetX; // - halfcellSize;
+    const x = j * cellW + offsetX;
     drawLine({
       ctx,
       start: { x, y: 0 },

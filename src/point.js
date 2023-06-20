@@ -147,9 +147,6 @@ export class Box extends Data {
       );
     }
 
-    if (point.x === this.right && point.y === this.bottom) {
-      console.log("contains point", point, this);
-    }
     return (
       point.x >= this.left &&
       point.x < this.right &&

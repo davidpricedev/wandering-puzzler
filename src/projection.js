@@ -34,6 +34,7 @@ export class Projection extends Data {
   // canvasViewport clipped to the part of the map that we will be displaying
   clippedCanvasViewport = null;
   _translateAndScale = null;
+  zoom = null;
 
   static buildOnCenter(canvas, mapBounds, zoom, viewCenter) {
     const canvasCenter = getCenter(canvas);
@@ -71,6 +72,7 @@ export class Projection extends Data {
       mapViewport,
       clippedCanvasViewport,
       _translateAndScale,
+      zoom,
     });
   }
 
