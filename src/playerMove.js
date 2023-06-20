@@ -22,6 +22,16 @@ export function movePlayer(oldState, setState, command) {
     });
   }
 
+  if (collidingSprite && collidingSprite.spriteType === "teleporter") {
+    const teleportDest = sprites.find(
+      (a) => a.spriteType === "teleportDestination",
+    );
+    return oldState.copy({
+      player: player.moveTo(teleportDest),
+      projection: oldState.projection.recenter(teleportDest),
+    });
+  }
+
   if (collidingSprite && collidingSprite.impassible) {
     return oldState;
   }

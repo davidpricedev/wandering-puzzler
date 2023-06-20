@@ -19,7 +19,7 @@ export function drawGameOver(ctx, canvas, reason, score) {
   ctx.font = "24px serif";
   ctx.fillText(reason, canvas.width / 2, canvas.height / 2 + 30);
   ctx.font = "24px serif";
-  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
+  ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 60);
 }
 
 export function drawLevelStart(ctx, canvas, mapName, mapComment) {
@@ -31,6 +31,11 @@ export function drawLevelStart(ctx, canvas, mapName, mapComment) {
   ctx.fillText(`Level ${mapName}`, canvas.width / 2, canvas.height / 2);
   ctx.font = "24px serif";
   ctx.fillText(mapComment, canvas.width / 2, canvas.height / 2 + 50);
+  ctx.fillText(
+    "press spacebar to start",
+    canvas.width / 2,
+    canvas.height / 2 + 80,
+  );
 }
 
 export function drawLevelComplete({
@@ -56,7 +61,7 @@ export function drawLevelComplete({
   ctx.fillText(
     `moves: ${moves} / ${maxMoves}`,
     canvas.width / 2,
-    canvas.height / 2 + 50,
+    canvas.height / 2 + 60,
   );
 }
 

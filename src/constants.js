@@ -12,7 +12,7 @@ export const directionMap = {
   right: { type: "move", direction: "right", x: 1, y: 0 },
 };
 
-export const tickInterval = 150;
+export const tickInterval = 80;
 
 export const fastTickInterval = 0;
 

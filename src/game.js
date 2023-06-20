@@ -118,6 +118,7 @@ const handleMovement = (setState) => (type, commandType) => {
     right: handleMove,
     zoomIn: () => handleZoom(setState, zoomChange.scale(-1)),
     zoomOut: () => handleZoom(setState, zoomChange),
+    space: () => setState((old) => old.copy({ levelStart: false })),
   };
   directionTable[commandType]();
 };

@@ -38,6 +38,10 @@ export class SpriteCollection extends Data {
     );
   }
 
+  find(fn) {
+    return this.sprites.find(fn);
+  }
+
   forEach(fn) {
     this.sprites.forEach(fn);
   }

@@ -22,6 +22,7 @@ export const KEY_MAP = {
   _: "zoomOut",
   "=": "zoomIn",
   "+": "zoomIn",
+  " ": "space",
 };
 
 export function keyboardSetup() {
