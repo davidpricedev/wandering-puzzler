@@ -5,6 +5,7 @@ export class Player extends Sprite {
   spriteType = "player";
   score = 0;
   char = "P";
+  moves = 0;
 
   static from(x, y) {
     return Player.create({
@@ -19,6 +20,10 @@ export class Player extends Sprite {
 
   draw(ctx, projection, assets) {
     drawPlayer(ctx, projection, assets, this);
+  }
+
+  moveTo(pos) {
+    return this.copy({ x: pos.x, y: pos.y, moves: this.moves + 1 });
   }
 }
 

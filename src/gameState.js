@@ -16,6 +16,8 @@ export class GameState extends Data {
   projection = null;
   mapBounds = null;
   gameOver = false;
+  levelComplete = false;
+  levelStart = true;
   gameOverReason = "";
   animateQueue = [];
   assets = null;

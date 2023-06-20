@@ -22,8 +22,25 @@ export function drawGameOver(ctx, canvas, reason, score) {
   ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
 }
 
-export function drawLevelComplete(ctx, state) {
-  const { canvas, score, maxScore, player, maxMoves } = state;
+export function drawLevelStart(ctx, canvas, mapName, mapComment) {
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.font = "48px serif";
+  ctx.fillText(`Level ${mapName}`, canvas.width / 2, canvas.height / 2);
+  ctx.font = "24px serif";
+  ctx.fillText(mapComment, canvas.width / 2, canvas.height / 2 + 50);
+}
+
+export function drawLevelComplete({
+  ctx,
+  canvas,
+  score,
+  maxScore,
+  moves,
+  maxMoves,
+}) {
   ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
@@ -37,7 +54,7 @@ export function drawLevelComplete(ctx, state) {
     canvas.height / 2 + 30,
   );
   ctx.fillText(
-    `moves: ${player.moves} / ${maxMoves}`,
+    `moves: ${moves} / ${maxMoves}`,
     canvas.width / 2,
     canvas.height / 2 + 50,
   );

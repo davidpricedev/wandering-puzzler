@@ -15,6 +15,13 @@ export function movePlayer(oldState, setState, command) {
   }
 
   const collidingSprite = sprites.getAt(newPlayer);
+  if (collidingSprite && collidingSprite.spriteType === "exit") {
+    return oldState.copy({
+      player: newPlayer,
+      levelComplete: true,
+    });
+  }
+
   if (collidingSprite && collidingSprite.impassible) {
     return oldState;
   }

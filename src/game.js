@@ -6,6 +6,8 @@ import {
   drawBusy,
   drawCanvasViewport,
   drawMapEdge,
+  drawLevelComplete,
+  drawLevelStart,
 } from "./framing.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
 import { directionMap, tickInterval, zoomChange } from "./constants.js";
@@ -46,8 +48,11 @@ function drawGame({
   canvas,
   ctx,
   projection,
-  mapBounds,
+  levelName,
   gameOver,
+  mapData,
+  levelComplete,
+  levelStart,
   gameOverReason,
   assets,
   animateQueue,
@@ -58,15 +63,28 @@ function drawGame({
   sprites
     .filterToViewport(projection.mapViewport)
     .forEach((s) => s.draw(ctx, projection, assets));
-  drawCanvasViewport(ctx, projection.canvasViewport);
+  // drawCanvasViewport(ctx, projection.canvasViewport);
   console.log("projection: ", projection);
   player.draw(ctx, projection, assets);
-  drawCenterLine(ctx, projection);
+  // drawCenterLine(ctx, projection);
   if (animateQueue.length > 0) {
     drawBusy(ctx, canvas);
   }
   if (gameOver) {
     drawGameOver(ctx, canvas, gameOverReason, player.score);
+  }
+  if (levelComplete) {
+    drawLevelComplete({
+      ctx,
+      canvas,
+      score: player.score,
+      maxScore: mapData.maxScore,
+      moves: player.moves,
+      maxMoves: mapData.maxMoves,
+    });
+  }
+  if (levelStart) {
+    drawLevelStart(ctx, canvas, levelName, mapData.comment);
   }
 
   drawMapEdge(ctx, projection);
@@ -85,7 +103,13 @@ const handleMovement = (setState) => (type, commandType) => {
 
   const direction = directionMap[commandType];
   const handleMove = () =>
-    setState((old) => old.copy(movePlayer(old, setState, direction)));
+    setState((old) => {
+      if (old.levelStart) {
+        return old.copy({ levelStart: false });
+      }
+
+      return old.copy(movePlayer(old, setState, direction));
+    });
   const directionTable = {
     restart: restartGame(setState),
     up: handleMove,
@@ -164,6 +188,9 @@ async function loadAssets() {
     ["shrubbery", "assets/shrub.svg"],
     ["wall", "assets/wallTexture.png"],
     ["coin", "assets/coin.svg"],
+    ["exit", "assets/exit.svg"],
+    ["teleporter", "assets/teleporter.svg"],
+    ["teleportDestination", "assets/teleportDestination.svg"],
   ];
   const imgs = await Promise.all(
     imagesToLoad.map(([k, src]) => {
