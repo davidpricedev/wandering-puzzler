@@ -1,25 +1,12 @@
 import * as R from "ramda";
-import { grassColor } from "./constants";
+import { defaultZoom, grassColor } from "./constants";
 import { Point, Box } from "./point";
 import { drawLine } from "./grid";
 
-export const drawGrass = (ctx, canvasOffset, mapBounds) => {
+export const drawGrass = (ctx, projection) => {
   ctx.fillStyle = grassColor;
-  const { canvasViewport: cv, mapViewport: mv, offset } = canvasOffset;
-  const { x: tlx, y: tly } = canvasOffset.translateAndScale({
-    x: Math.max(0, mv.left),
-    y: Math.max(0, mv.top),
-  });
-  const { x: brx, y: bry } = canvasOffset.translateAndScale({
-    x: Math.min(mapBounds.width(), mv.right + 1),
-    y: Math.min(mapBounds.height(), mv.bottom + 1),
-  });
-  ctx.fillRect(
-    Math.max(tlx, cv.left),
-    Math.max(tly, cv.top),
-    Math.min(brx - tlx, cv.width()),
-    Math.min(bry - tly, cv.height()),
-  );
+  const { clippedCanvasViewport: ccv } = projection;
+  ctx.fillRect(ccv.left, ccv.top, ccv.width(), ccv.height());
 };
 
 export function drawGameOver(ctx, canvas, reason, score) {
@@ -35,6 +22,27 @@ export function drawGameOver(ctx, canvas, reason, score) {
   ctx.fillText(`score: ${score}`, canvas.width / 2, canvas.height / 2 + 50);
 }
 
+export function drawLevelComplete(ctx, state) {
+  const { canvas, score, maxScore, player, maxMoves } = state;
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.font = "48px serif";
+  ctx.fillText("Level Complete", canvas.width / 2, canvas.height / 2);
+  ctx.font = "24px serif";
+  ctx.fillText(
+    `score: ${score} / ${maxScore}`,
+    canvas.width / 2,
+    canvas.height / 2 + 30,
+  );
+  ctx.fillText(
+    `moves: ${player.moves} / ${maxMoves}`,
+    canvas.width / 2,
+    canvas.height / 2 + 50,
+  );
+}
+
 export function drawBusy(ctx, canvas) {
   ctx.fillStyle = "rgba(0,0,0,0.15)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -44,71 +52,58 @@ export function drawBusy(ctx, canvas) {
   ctx.fillText("working...", canvas.width / 2, 20);
 }
 
-/**
- * center is the desired center point relative to the map (not the canvas)
- * translation needs to account for the size of the grid too, so subtract 0.5
- * to prevent make the center of the center grid cell the center of the canvas
- * Original game is 11 x 7, so we'll aim for that while staying square
- */
-export const getCanvasOffset = (canvas, centerX, centerY) => {
-  const center = getCenter(canvas);
-  const gridSize = getGridSize(canvas);
-  const canvasViewport = getCanvasViewport(canvas);
-  const mapWidth = canvasViewport.width() / gridSize;
-  const mapHeight = canvasViewport.height() / gridSize;
-  const mapViewport = Box.fromCenter(
-    Point.of({ x: centerX, y: centerY }),
-    Math.floor(mapWidth / 2),
-    Math.floor(mapHeight / 2),
-  );
-  const offsetX = (centerX - gridSize / 2) % gridSize;
-  const offsetY = (centerY - gridSize / 2) % gridSize;
-  return {
-    center,
-    gridSize,
-    cellW: gridSize,
-    cellH: gridSize,
-    canvasWidth: canvas.width,
-    canvasHeight: canvas.height,
-    canvasViewport,
-    mapViewport,
-    offset: Point.of({ x: offsetX, y: offsetY }),
-    translateAndScale: ({ x, y }) => ({
-      x: Math.floor((x - centerX - 0.5) * gridSize + canvas.width / 2),
-      y: Math.floor((y - centerY - 0.5) * gridSize + canvas.height / 2),
-      width: gridSize,
-      height: gridSize,
-    }),
-  };
-};
+// Need to switch to drawing lines rather than a rect and clip based on the projection
+export function drawMapEdge(ctx, projection) {
+  const { clippedCanvasViewport: ccv, mapBounds } = projection;
+  const topLeft = projection.translateAndScale(mapBounds.topLeft());
+  const bottomRight = projection.translateAndScale(mapBounds.bottomRight());
+  const topRight = Point.of(bottomRight.x, topLeft.y);
+  const bottomLeft = Point.of(topLeft.x, bottomRight.y);
 
-export const getCenter = (canvas) =>
-  Point.of({
-    x: Math.round(canvas.width / 2),
-    y: Math.round(canvas.height / 2),
-  });
+  const edgesH = [
+    { start: topLeft, end: topRight },
+    { start: bottomLeft, end: bottomRight },
+  ];
+  const edgesV = [
+    { start: topLeft, end: bottomLeft },
+    { start: topRight, end: bottomRight },
+  ];
+  const commonProps = { ctx, bounds: ccv, color: "black", width: 5 };
+  edgesH.forEach((a) => drawClampedHorizontalLine({ ...a, ...commonProps }));
+  edgesV.forEach((a) => drawClampedVerticalLine({ ...a, ...commonProps }));
+}
 
-// Original game is 11 x 7, so we'll aim for that while staying square
-export const getGridSize = (canvas) =>
-  //Math.min(Math.floor(canvas.width / 40), Math.floor(canvas.height / 40));
-  Math.min(Math.floor(canvas.width / 11), Math.floor(canvas.height / 7));
+export function drawClampedHorizontalLine({
+  ctx,
+  start,
+  end,
+  bounds,
+  color,
+  width,
+}) {
+  if (start.y !== end.y) throw new Error("start and end must have same y");
+  if (start.y < bounds.top || start.y > bounds.bottom) return;
+  const clampedStart = Point.of(Math.max(start.x, bounds.left), start.y);
+  const clampedEnd = Point.of(Math.min(end.x, bounds.right), end.y);
+  console.log("drawing edgeH line: ", clampedStart, clampedEnd, bounds);
+  drawLine({ ctx, start: clampedStart, end: clampedEnd, color, width });
+}
 
-export const getCanvasViewport = (canvas) => {
-  const gridSize = getGridSize(canvas);
-  const center = getCenter(canvas);
-  // move from center point to top left of the center box
-  // then find the remainer of the division by the grid size
-  const vptl = Point.of({
-    x: Math.round((center.x - gridSize / 2) % gridSize),
-    y: Math.round((center.y - gridSize / 2) % gridSize),
-  });
-  return Box.create({
-    left: vptl.x,
-    top: vptl.y,
-    right: vptl.x + gridSize * Math.floor((canvas.width - vptl.x) / gridSize),
-    bottom: vptl.y + gridSize * Math.floor((canvas.height - vptl.y) / gridSize),
-  });
-};
+export function drawClampedVerticalLine({
+  ctx,
+  start,
+  end,
+  bounds,
+  color,
+  width,
+}) {
+  if (start.x !== end.x) throw new Error("start and end must have same x");
+  if (start.x < bounds.left || start.x > bounds.right) return;
+  const clampedStart = Point.of(start.x, Math.max(start.y, bounds.top));
+  const clampedEnd = Point.of(start.x, Math.min(end.y, bounds.bottom));
+  console.log("drawing edgeV line: ", clampedStart, clampedEnd, bounds);
+  drawLine({ ctx, start: clampedStart, end: clampedEnd, color, width });
+}
 
 export const drawCanvasViewport = (ctx, cv) => {
   console.log("drawing cv: ", cv.left, cv.top, cv.width(), cv.height(), cv);

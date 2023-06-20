@@ -18,6 +18,10 @@ export const KEY_MAP = {
   l: "right",
   // Meta keys
   Escape: "restart",
+  "-": "zoomOut",
+  _: "zoomOut",
+  "=": "zoomIn",
+  "+": "zoomIn",
 };
 
 export function keyboardSetup() {

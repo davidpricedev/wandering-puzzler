@@ -82,5 +82,14 @@ Running:
 
 - sliding diagonally shouldn't happen unless the arrow/rock is moving (if they start on a block they would otherwise slide off of, that diagonal slide shouldn't happen)
 - we don't consider the player when checking if a rock can fall, but we should - player should be able to support the rock unless it has momentum
-- a moving rock should trigger its neighbors to move, but it doesn't yet
 - in some cases we need to either trigger movement checks for diagonals too? If a rock is up a slope wall and can't roll down due to a shrub/diamond, it should fall after the player walks over the diamond/shrub
+  - I think I need to keep track of whether a rock/arrow is supported or not - and then check every turn to see if a "supported" rock/arrow is no longer supported. That might help with the sliding-off issue too - since a rock/arrow that is supported doesn't have momentum to slide off.
+- a moving rock should trigger rocks above it to move once it moves out of the way
+- off-by-1 issue with boundary
+
+## TODO
+
+- add a try again button on gameover and handle clicks for it (also handle space key as restart when on gameover screen)
+- add level list drop-down to select level
+- make levels chain - after completing one move to the next
+- add a few intro levels to introduce the various mechanics

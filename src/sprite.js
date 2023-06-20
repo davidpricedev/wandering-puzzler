@@ -33,13 +33,13 @@ export class Sprite extends Data {
     });
   }
 
-  draw(ctx, canvasOffset, assets) {
+  draw(ctx, projection, assets) {
     if (this.drawSprite) {
-      this.drawSprite(ctx, canvasOffset, assets, this);
+      this.drawSprite(ctx, projection, assets, this);
     } else if (assets[this.spriteType]) {
-      drawImage(ctx, canvasOffset, assets[this.spriteType], this);
+      drawImage(ctx, projection, assets[this.spriteType], this);
     } else {
-      drawSquare(ctx, canvasOffset, this);
+      drawSquare(ctx, projection, this);
     }
   }
 
@@ -57,10 +57,10 @@ export class Sprite extends Data {
 }
 
 /** Start witt really bad graphics, and add some proper svgs in later */
-const drawSquare = (ctx, canvasOffset, sprite) => {
+const drawSquare = (ctx, projection, sprite) => {
   const { color, char } = sprite;
   ctx.fillStyle = color;
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.fillRect(x, y, width, height);
   ctx.font = `${width}px serif`;
   ctx.textAlign = "center";
@@ -68,8 +68,8 @@ const drawSquare = (ctx, canvasOffset, sprite) => {
   ctx.fillText(char, x + width * 0.5, y + height * 0.85);
 };
 
-export const drawImage = (ctx, canvasOffset, image, sprite) => {
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+export const drawImage = (ctx, projection, image, sprite) => {
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.drawImage(
     image, // 0, 0, image.width, image.height,
     x,
@@ -129,17 +129,17 @@ const attributesMap = {
   rightArrow: { ...arrowAttributes, drawSprite: drawRightArrowTile },
 };
 
-function drawWallTile(ctx, canvasOffset, assets, sprite) {
+function drawWallTile(ctx, projection, assets, sprite) {
   const { color } = sprite;
   ctx.fillStyle = color;
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.fillRect(x, y, width, height);
   ctx.drawImage(assets.wall, x, y, width, height);
 }
 
-function drawLeftArrowTile(ctx, canvasOffset, assets, sprite) {
+function drawLeftArrowTile(ctx, projection, assets, sprite) {
   const scaley = 1 / 3;
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.drawImage(
     assets.arrow,
     x,
@@ -149,8 +149,8 @@ function drawLeftArrowTile(ctx, canvasOffset, assets, sprite) {
   );
 }
 
-function drawRightArrowTile(ctx, canvasOffset, assets, sprite) {
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+function drawRightArrowTile(ctx, projection, assets, sprite) {
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.save();
   ctx.scale(-1, 1);
   // ctx.translate(-sprite.x, sprite.y);
@@ -165,9 +165,8 @@ function drawRightArrowTile(ctx, canvasOffset, assets, sprite) {
   ctx.restore();
 }
 
-function drawLeaningWallTile(ctx, canvasOffset, assets, sprite) {
-  const { char } = sprite;
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+function drawLeaningWallTile(ctx, projection, assets, sprite) {
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.drawImage(
     getLeaningWallImage(sprite.spriteType, width, assets["wall"]),
     x,

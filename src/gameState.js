@@ -1,16 +1,19 @@
 import * as R from "ramda";
 import { Data } from "dataclass";
-import { getCanvasOffset } from "./framing";
 import { SpriteCollection } from "./sprites";
 import { Map } from "./map";
 import { LEVELS } from "./maps";
 import { Point, Box } from "./point";
+import { defaultZoom } from "./constants";
+import { Projection } from "./projection";
+
 export class GameState extends Data {
+  mapData = null;
   player = null;
   sprites = null;
   canvas = null;
   ctx = null;
-  canvasOffset = null;
+  projection = null;
   mapBounds = null;
   gameOver = false;
   gameOverReason = "";
@@ -20,6 +23,7 @@ export class GameState extends Data {
   levelComplete = false;
   levelComment = "";
   maxScore = 0;
+  zoom = null;
 
   static initialize(levelName, canvas, assets) {
     const mapData = Map.parse(LEVELS[levelName]);
@@ -34,18 +38,26 @@ export class GameState extends Data {
       allSprites,
     );
     const sprites = SpriteCollection.fromSprites(spriteList);
-    const canvasOffset = getCanvasOffset(canvas, player.x, player.y);
+    const zoom = defaultZoom;
+    const projection = Projection.buildOnCenter(
+      canvas,
+      mapBounds,
+      zoom,
+      player,
+    );
     return GameState.create({
+      mapData,
+      mapBounds,
       levelName,
       player,
       sprites,
       canvas,
       ctx: canvas.getContext("2d"),
-      canvasOffset,
-      mapBounds,
+      projection,
       assets,
       maxScore,
       levelComment: comment,
+      zoom,
     });
   }
 }

@@ -17,14 +17,14 @@ export class Player extends Sprite {
     return this.copy({ score: this.score + score });
   }
 
-  draw(ctx, canvasOffset, assets) {
-    drawPlayer(ctx, canvasOffset, assets, this);
+  draw(ctx, projection, assets) {
+    drawPlayer(ctx, projection, assets, this);
   }
 }
 
-function drawPlayer(ctx, canvasOffset, assets, sprite) {
+function drawPlayer(ctx, projection, assets, sprite) {
   const scalex = 0.65;
-  const { x, y, width, height } = canvasOffset.translateAndScale(sprite);
+  const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.strokeStyle = "white";
   ctx.strokeRect(x, y, width, height);
   ctx.drawImage(

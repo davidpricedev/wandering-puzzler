@@ -1,7 +1,6 @@
-export const gridSize = 50;
+import { Point } from "./point";
 
-// export const gridColor = "#027102";
-export const gridColor = "rgb(0, 0, 0, .2)";
+export const gridColor = "rgb(0, 0, 0, .06)";
 
 export const grassColor = "#047304";
 export const wallColor = "#444";
@@ -29,9 +28,15 @@ export const charToType = {
   ">": "rightArrow",
   "<": "leftArrow",
   X: "exit",
+  A: "teleportDestination",
+  T: "teleporter",
 };
 
 export const charAliases = {
   "=": "#",
   "-": "#",
 };
+
+export const defaultZoom = Point.of(11, 7);
+
+export const zoomChange = Point.of(2, 2);

@@ -50,7 +50,7 @@ export class SpriteCollection extends Data {
 
   filterToViewport(viewport) {
     return SpriteCollection.fromSprites(
-      this.sprites.filter((s) => viewport.containsPoint(s)),
+      this.sprites.filter((s) => viewport.containsPoint(s, true)),
     );
   }
 }

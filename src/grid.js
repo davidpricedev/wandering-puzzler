@@ -1,35 +1,40 @@
 import * as R from "ramda";
 import { gridColor } from "./constants";
 
-export function drawGrid(ctx, canvasOffset) {
-  const { cx, cy, gridSize, canvasWidth, canvasHeight } = canvasOffset;
-  const halfGridSize = gridSize / 2;
-  const offsetX = (cx - halfGridSize) % gridSize;
-  const offsetY = (cy - halfGridSize) % gridSize;
-  console.log("offsets for grid: ", offsetX, offsetY, gridSize);
-  R.range(0, canvasHeight / gridSize + 1).forEach((i) => {
+export function drawGrid(ctx, projection) {
+  const {
+    cellW,
+    cellH,
+    canvasW,
+    canvasH,
+    canvasViewport: cv,
+    mapViewport: mv,
+  } = projection;
+  const { x: offsetX, y: offsetY } = projection.translateAndScale(mv.topLeft());
+  console.log("drawing grid: ", offsetX, offsetY, cv);
+  R.range(0, canvasH / cellH + 1).forEach((i) => {
     // horizontal
-    const y = i * gridSize + offsetY; // - halfGridSize;
+    const y = i * cellH + offsetY; // - halfcellSize;
     drawLine({
       ctx,
       start: { x: 0, y },
-      end: { x: canvasWidth, y },
+      end: { x: canvasW, y },
       color: gridColor,
     });
   });
-  R.range(0, canvasWidth / gridSize + 1).forEach((j) => {
+  R.range(0, canvasW / cellW + 1).forEach((j) => {
     // vertical
-    const x = j * gridSize + offsetX; // - halfGridSize;
+    const x = j * cellW + offsetX; // - halfcellSize;
     drawLine({
       ctx,
       start: { x, y: 0 },
-      end: { x, y: canvasHeight },
+      end: { x, y: canvasH },
       color: gridColor,
     });
   });
 }
 
-export function drawLine({ ctx, start, end, color }) {
+export function drawLine({ ctx, start, end, color, width = 1 }) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -38,18 +43,18 @@ export function drawLine({ ctx, start, end, color }) {
   ctx.stroke();
 }
 
-export function drawCenterLine(ctx, canvasOffset) {
-  const { x, y, canvasWidth, canvasHeight } = canvasOffset;
+export function drawCenterLine(ctx, projection) {
+  const { canvasCenter, canvasW, canvasH, cellW, cellH } = projection;
   drawLine({
     ctx,
-    start: { x: x, y: 0 },
-    end: { x: x, y: canvasHeight },
-    color: "rgba(155,0,0,0.05)",
+    start: { x: canvasCenter.x, y: 0 },
+    end: { x: canvasCenter.x, y: canvasH },
+    color: "rgba(155,0,0,0.07)",
   });
   drawLine({
     ctx,
-    start: { x: 0, y: y },
-    end: { x: canvasWidth, y: y },
-    color: "rgba(155,0,0,0.05)",
+    start: { x: 0, y: canvasCenter.y },
+    end: { x: canvasW, y: canvasCenter.y },
+    color: "rgba(155,0,0,0.07)",
   });
 }

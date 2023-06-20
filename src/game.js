@@ -5,10 +5,10 @@ import {
   drawGameOver,
   drawBusy,
   drawCanvasViewport,
-  getCanvasOffset,
+  drawMapEdge,
 } from "./framing.js";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
-import { directionMap, tickInterval } from "./constants.js";
+import { directionMap, tickInterval, zoomChange } from "./constants.js";
 import { GameState } from "./gameState.js";
 import { movePlayer } from "./playerMove.js";
 import { Box, Point } from "./point.js";
@@ -45,7 +45,7 @@ function drawGame({
   sprites,
   canvas,
   ctx,
-  canvasOffset,
+  projection,
   mapBounds,
   gameOver,
   gameOverReason,
@@ -53,21 +53,23 @@ function drawGame({
   animateQueue,
 }) {
   ctx.reset();
-  drawGrass(ctx, canvasOffset, mapBounds);
-  drawGrid(ctx, canvasOffset);
+  drawGrass(ctx, projection);
+  drawGrid(ctx, projection);
   sprites
-    .filterToViewport(canvasOffset.mapViewport)
-    .forEach((s) => s.draw(ctx, canvasOffset, assets));
-  drawCanvasViewport(ctx, canvasOffset.canvasViewport);
-  console.log("canvasoffset: ", canvasOffset);
-  player.draw(ctx, canvasOffset, assets);
-  drawCenterLine(ctx, canvasOffset);
+    .filterToViewport(projection.mapViewport)
+    .forEach((s) => s.draw(ctx, projection, assets));
+  drawCanvasViewport(ctx, projection.canvasViewport);
+  console.log("projection: ", projection);
+  player.draw(ctx, projection, assets);
+  drawCenterLine(ctx, projection);
   if (animateQueue.length > 0) {
     drawBusy(ctx, canvas);
   }
   if (gameOver) {
     drawGameOver(ctx, canvas, gameOverReason, player.score);
   }
+
+  drawMapEdge(ctx, projection);
 }
 
 const restartGame = (setState) => () => {
@@ -83,20 +85,22 @@ const handleMovement = (setState) => (type, commandType) => {
 
   const direction = directionMap[commandType];
   const handleMove = () =>
-    setState((old) => movePlayer(old, setState, direction));
+    setState((old) => old.copy(movePlayer(old, setState, direction)));
   const directionTable = {
     restart: restartGame(setState),
     up: handleMove,
     down: handleMove,
     left: handleMove,
     right: handleMove,
+    zoomIn: () => handleZoom(setState, zoomChange.scale(-1)),
+    zoomOut: () => handleZoom(setState, zoomChange),
   };
   directionTable[commandType]();
 };
 
 const handleMovingViewport = (setState, oldState) => (newState) => {
-  const { player, canvas, canvasOffset } = newState;
-  const { mapViewport: mv } = canvasOffset;
+  const { player, projection } = newState;
+  const { mapViewport: mv } = projection;
 
   // prevent user from wandering off the map
   if (!mv.containsPoint(player)) {
@@ -110,9 +114,8 @@ const handleMovingViewport = (setState, oldState) => (newState) => {
     player.y - mv.top < 1 ||
     mv.bottom - player.y < 2
   ) {
-    const newCanvasOffset = getCanvasOffset(canvas, player.x, player.y);
     return newState.copy({
-      canvasOffset: newCanvasOffset,
+      projection: projection.recenter(player),
     });
   }
 
@@ -172,4 +175,18 @@ async function loadAssets() {
     }),
   );
   return R.reduce((acc, img_1) => ({ ...acc, ...img_1 }), {}, imgs);
+}
+
+function handleZoom(setState, direction) {
+  setState((old) => {
+    const zoom = old.zoom.add(direction);
+    if (zoom.x <= 7 || zoom.y <= 5) {
+      return old;
+    }
+
+    return old.copy({
+      zoom,
+      projection: old.projection.zoomTo(zoom),
+    });
+  });
 }

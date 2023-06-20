@@ -5,8 +5,17 @@ export class Point extends Data {
   x = 0;
   y = 0;
 
-  static of({ x, y }) {
-    return Point.create({ x, y });
+  static of(a, b) {
+    if (b !== undefined) {
+      return Point.create({ x: a, y: b });
+    } else if (Array.isArray(a)) {
+      return Point.create({ x: a[0], y: a[1] });
+    } else if ("x" in a && "y" in a) {
+      return Point.create({ x: a.x, y: a.y });
+    } else {
+      console.error(`Invalid arguments to Point.of: `, a, b);
+      throw new Error(`Invalid arguments to Point.of: ${a}, ${b}`);
+    }
   }
 
   add(other) {
@@ -38,14 +47,22 @@ export class Point extends Data {
     return this.x === 0 && this.y === 0;
   }
 
-  static up = () => Point.of({ x: 0, y: -1 });
-  static upRight = () => Point.of({ x: 1, y: -1 });
-  static right = () => Point.of({ x: 1, y: 0 });
-  static downRight = () => Point.of({ x: 1, y: 1 });
-  static down = () => Point.of({ x: 0, y: 1 });
-  static downLeft = () => Point.of({ x: -1, y: 1 });
-  static left = () => Point.of({ x: -1, y: 0 });
-  static upLeft = () => Point.of({ x: -1, y: -1 });
+  modulo(scalar) {
+    return Point.create({
+      x: this.x % scalar,
+      y: this.y % scalar,
+    });
+  }
+
+  static up = () => Point.of(0, -1);
+  static upRight = () => Point.of(1, -1);
+  static right = () => Point.of(1, 0);
+  static downRight = () => Point.of(1, 1);
+  static down = () => Point.of(0, 1);
+  static downLeft = () => Point.of(-1, 1);
+  static left = () => Point.of(-1, 0);
+  static upLeft = () => Point.of(-1, -1);
+  static zero = () => Point.of(0, 0);
 
   static arrayInclues(point, array) {
     return array.some((p) => p.equals(point));
@@ -105,19 +122,19 @@ export class Box extends Data {
   }
 
   topLeft() {
-    return Point.of({ x: this.left, y: this.top });
+    return Point.of(this.left, this.top);
   }
 
   topRight() {
-    return Point.of({ x: this.right, y: this.top });
+    return Point.of(this.right, this.top);
   }
 
   bottomLeft() {
-    return Point.of({ x: this.left, y: this.bottom });
+    return Point.of(this.left, this.bottom);
   }
 
   bottomRight() {
-    return Point.of({ x: this.right, y: this.bottom });
+    return Point.of(this.right, this.bottom);
   }
 
   containsPoint(point, includeBREdge = false) {
@@ -130,6 +147,9 @@ export class Box extends Data {
       );
     }
 
+    if (point.x === this.right && point.y === this.bottom) {
+      console.log("contains point", point, this);
+    }
     return (
       point.x >= this.left &&
       point.x < this.right &&
