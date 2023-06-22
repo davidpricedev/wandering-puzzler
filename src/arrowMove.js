@@ -24,11 +24,11 @@ export function handleArrowCollision({
   const newArrow = collidingSprite.moveTo(newArrowPosition);
   const newSprites = sprites.move(collidingSprite, newArrowPosition);
 
-  setTimeout(() => animateArrow(setState, newArrow), fastTickInterval);
-
   return oldState.copy({
     player: newPlayer,
     sprites: newSprites,
+    oldPlayerPos: Point.of(player),
+    movedSprite: collidingSprite,
   });
 }
 
@@ -77,20 +77,25 @@ export function animateArrow(setState, arrow) {
       });
     }
 
+    if (arrow.hasInitialSupport(sprites)) {
+      return oldState.copy({ animateQueue: queueWithoutArrow });
+    }
+
     const newArrowPos = Point.of(arrow).add(flightDirection);
     const newArrow = arrow.moveTo(newArrowPos);
     if (newArrowPos.equals(player)) {
       return oldState.copy({
+        movedSprite: arrow,
         animateQueue: queueWithoutArrow,
         gameOver: true,
         gameOverReason: "You were poked by a arrow",
       });
     }
 
-    setTimeout(() => animateArrow(setState, newArrow), tickInterval);
     return oldState.copy({
+      movedSprite: arrow,
       sprites: sprites.move(arrow, newArrowPos),
-      animateQueue: R.concat(queueWithoutArrow, [newArrow]),
+      animateQueue: R.concat([newArrow], queueWithoutArrow),
     });
   });
 }

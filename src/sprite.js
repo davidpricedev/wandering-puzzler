@@ -2,6 +2,14 @@ import * as R from "ramda";
 import { Data } from "dataclass";
 import { charToType, wallColor } from "./constants";
 import { Point } from "./point";
+import {
+  drawImage,
+  drawSquare,
+  drawLeaningWallTile,
+  drawWallTile,
+  drawLeftArrowTile,
+  drawRightArrowTile,
+} from "./canvas";
 
 export class Sprite extends Data {
   x = 0;
@@ -12,6 +20,7 @@ export class Sprite extends Data {
   canBeTrampled = false;
   char = "?";
   score = 0;
+  u;
   death = false;
   gameOverReason = "";
   isMobile = false;
@@ -22,6 +31,8 @@ export class Sprite extends Data {
     Point.downRight(),
   ];
   drawSprite = null;
+  supportedBy = null;
+  hasMoved = false;
 
   static fromType(x, y, spriteType) {
     return Sprite.create({
@@ -44,7 +55,7 @@ export class Sprite extends Data {
   }
 
   moveTo(pos) {
-    return this.copy({ x: pos.x, y: pos.y });
+    return this.copy({ x: pos.x, y: pos.y, hasMoved: true });
   }
 
   isRock() {
@@ -54,30 +65,13 @@ export class Sprite extends Data {
   isArrow() {
     return ["leftArrow", "rightArrow"].includes(this.spriteType);
   }
+
+  hasInitialSupport(sprites) {
+    return (
+      !this.hasMoved && this.supportedBy && sprites.getAt(this.supportedBy)
+    );
+  }
 }
-
-/** Start witt really bad graphics, and add some proper svgs in later */
-const drawSquare = (ctx, projection, sprite) => {
-  const { color, char } = sprite;
-  ctx.fillStyle = color;
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.fillRect(x, y, width, height);
-  ctx.font = `${width}px serif`;
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#DDD";
-  ctx.fillText(char, x + width * 0.5, y + height * 0.85);
-};
-
-export const drawImage = (ctx, projection, image, sprite) => {
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.drawImage(
-    image, // 0, 0, image.width, image.height,
-    x,
-    y,
-    width,
-    height,
-  );
-};
 
 const wallAttributes = {
   color: wallColor,
@@ -128,67 +122,3 @@ const attributesMap = {
   leftArrow: { ...arrowAttributes, drawSprite: drawLeftArrowTile },
   rightArrow: { ...arrowAttributes, drawSprite: drawRightArrowTile },
 };
-
-function drawWallTile(ctx, projection, assets, sprite) {
-  const { color } = sprite;
-  ctx.fillStyle = color;
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.fillRect(x, y, width, height);
-  ctx.drawImage(assets.wall, x, y, width, height);
-}
-
-function drawLeftArrowTile(ctx, projection, assets, sprite) {
-  const scaley = 1 / 3;
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.drawImage(
-    assets.arrow,
-    x,
-    y + height * (0.5 - scaley / 2),
-    width,
-    height * scaley,
-  );
-}
-
-function drawRightArrowTile(ctx, projection, assets, sprite) {
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.save();
-  ctx.scale(-1, 1);
-  // ctx.translate(-sprite.x, sprite.y);
-  ctx.drawImage(
-    assets.arrow,
-    // 0, 0, assets.arrow.width, assets.arrow.height,
-    -x - width,
-    y + height / 3,
-    width,
-    height / 3,
-  );
-  ctx.restore();
-}
-
-function drawLeaningWallTile(ctx, projection, assets, sprite) {
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.drawImage(
-    getLeaningWallImage(sprite.spriteType, width, assets["wall"]),
-    x,
-    y,
-    width,
-    height,
-  );
-}
-
-function getLeaningWallImage(spriteType, scale, image) {
-  const scratch = document.createElement("canvas");
-  scratch.width = scale;
-  scratch.height = scale;
-  const ctx = scratch.getContext("2d");
-  ctx.fillStyle = wallColor;
-  ctx.translate(scale / 2, scale / 2);
-  ctx.rotate(spriteType === "leftLeanWall" ? -Math.PI / 4 : Math.PI / 4);
-  ctx.translate(-scale / 2, -scale / 2);
-  const x = (scale * 3) / 8;
-  const w = scale / 4;
-  ctx.fillRect(x, -50, w, scale + 300);
-  ctx.drawImage(image, x, -50, w, scale + 300);
-  ctx.restore();
-  return scratch;
-}

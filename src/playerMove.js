@@ -19,6 +19,7 @@ export function movePlayer(oldState, setState, command) {
     return oldState.copy({
       player: newPlayer,
       levelComplete: true,
+      oldPlayerPos: Point.of(player),
     });
   }
 
@@ -29,6 +30,7 @@ export function movePlayer(oldState, setState, command) {
     return oldState.copy({
       player: player.moveTo(teleportDest),
       projection: oldState.projection.recenter(teleportDest),
+      oldPlayerPos: Point.of(player),
     });
   }
 
@@ -36,17 +38,20 @@ export function movePlayer(oldState, setState, command) {
     return oldState;
   }
 
-  const newNeighbors = sprites.getNeighbors(newPlayer);
   if (collidingSprite && collidingSprite.canBeTrampled) {
     return oldState.copy({
       sprites: sprites.removeAt(newPlayer),
       player: newPlayer.addScore(collidingSprite.score),
+      oldPlayerPos: Point.of(player),
+      movedSprite: collidingSprite,
     });
   }
 
   if (collidingSprite && collidingSprite.death) {
     return oldState.copy({
       player: newPlayer,
+      oldPlayerPos: Point.of(player),
+      movedSprite: collidingSprite,
       gameOver: true,
       gameOverReason: collidingSprite.gameOverReason,
     });
@@ -75,5 +80,6 @@ export function movePlayer(oldState, setState, command) {
   // walk into empty space
   return oldState.copy({
     player: newPlayer,
+    oldPlayerPos: Point.of(player),
   });
 }

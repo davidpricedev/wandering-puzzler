@@ -1,41 +1,48 @@
 import * as R from "ramda";
-import { drawGrid, drawCenterLine } from "./grid.js";
+import { drawGrid, drawCenterLine } from "./canvas/drawGrid.js";
 import {
   drawGrass,
   drawGameOver,
   drawBusy,
-  drawCanvasViewport,
+  // drawCanvasViewport,
   drawMapEdge,
   drawLevelComplete,
   drawLevelStart,
-} from "./framing.js";
+  loadAssets,
+} from "./canvas";
 import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
-import { directionMap, tickInterval, zoomChange } from "./constants.js";
+import {
+  cardinalDirectionMap,
+  fastTickInterval,
+  tickInterval,
+  zoomChange,
+} from "./constants.js";
 import { GameState } from "./gameState.js";
 import { movePlayer } from "./playerMove.js";
 import { Box, Point } from "./point.js";
 import { animateArrow } from "./arrowMove.js";
 import { animateRock } from "./rockMove.js";
-import { inspect } from "./util";
 import { LEVELS } from "./maps/index.js";
 
 export async function runGame(canvas, scoreSpan, restartButton) {
   const assets = await loadAssets();
-  let state = GameState.initialize(0, canvas, assets);
+  let state;
 
   const setState = (stateChangeFn) => {
     state = R.pipe(
       stateChangeFn,
       // inspect("stateChangeFn"),
-      handleProximityAnimation(setState, state),
-      // inspect("handleProximityAnimation"),
-      handleMovingViewport(setState, state),
-      // inspect("handleMovingViewport"),
+      handleProximityChecks(state),
+      handleMapEdge(state),
+      handleMovingViewport(state),
     )(state);
-    // console.log("state: ", state);
+    console.log("state: ", state);
     drawGame(state);
     scoreSpan.textContent = state.player.score;
+    handleNextAnimation(state);
   };
+
+  state = GameState.initialize(setState, 7, canvas, assets);
 
   keyboardSetup();
   drawGame(state);
@@ -92,7 +99,7 @@ function drawGame({
 
 const restartGame = (setState) => () => {
   setState((old) =>
-    GameState.initialize(old.levelNumber, old.canvas, old.assets),
+    GameState.initialize(setState, old.levelNumber, old.canvas, old.assets),
   );
 };
 
@@ -101,7 +108,7 @@ const handleMovement = (setState) => (type, commandType) => {
     return;
   }
 
-  const direction = directionMap[commandType];
+  const direction = cardinalDirectionMap[commandType];
   const handleMove = () =>
     setState((old) => {
       if (old.levelStart) {
@@ -116,28 +123,33 @@ const handleMovement = (setState) => (type, commandType) => {
     down: handleMove,
     left: handleMove,
     right: handleMove,
-    zoomIn: () => handleZoom(setState, zoomChange.scale(-1)),
-    zoomOut: () => handleZoom(setState, zoomChange),
-    space: () => handleSpacebar(setState),
+    zoomIn: handleZoom(setState, zoomChange.scale(-1)),
+    zoomOut: handleZoom(setState, zoomChange),
+    space: handleSpacebar(setState),
   };
   directionTable[commandType]();
 };
 
-const handleMovingViewport = (setState, oldState) => (newState) => {
+/**
+ * prevent player from walking off the map
+ */
+const handleMapEdge = (oldState) => (newState) => {
+  const { player, mapBounds } = newState;
+  console.log("handleMapEdge: ", mapBounds.containsPoint(player));
+  return mapBounds.containsPoint(player) ? newState : oldState;
+};
+
+/**
+ * recenter the map viewport on the player when the player is near the edge
+ */
+const handleMovingViewport = (oldState) => (newState) => {
   const { player, projection } = newState;
-  const { mapViewport: mv } = projection;
-
-  // prevent user from wandering off the map
-  if (!mv.containsPoint(player)) {
-    return oldState;
-  }
-
-  // recenter the map viewport on the player when the player is near the edge
+  const mv = projection.mapViewport;
   if (
     player.x - mv.left < 1 ||
-    mv.right - player.x < 2 ||
+    mv.right - player.x < 1 ||
     player.y - mv.top < 1 ||
-    mv.bottom - player.y < 2
+    mv.bottom - player.y < 1
   ) {
     return newState.copy({
       projection: projection.recenter(player),
@@ -150,62 +162,64 @@ const handleMovingViewport = (setState, oldState) => (newState) => {
 /**
  * Animate each of the 3 cardinal directions we were adjacent to previously
  */
-const handleProximityAnimation = (setState, oldState) => (newState) => {
-  const direction = Point.of(newState.player).subtract(oldState.player);
-  if (direction.isZero()) {
-    return newState;
-  }
+const handleProximityChecks = (oldState) => (newState) => {
+  const { sprites, oldPlayerPos, movedSprite, animateQueue, player } = newState;
+  const playerNeighbors = oldPlayerPos
+    ? getNeighborsOfMovedPlayer(sprites, Point.of(oldPlayerPos))
+    : [];
 
-  const oldNeighbors = newState.sprites
-    .getNeighbors(oldState.player)
-    .filter((s) => !Point.of(s).equals(newState.player));
-  const animateQueue = R.concat(
-    newState.animateQueue,
-    oldNeighbors.filter((s) => s.isMobile),
-  );
-  if (animateQueue.length > 0) {
-    setTimeout(() => runAnimationQueue(setState, animateQueue), tickInterval);
-  }
-  return newState.copy({ animateQueue });
+  const spriteNeighbors = movedSprite
+    ? getNeighborsOfMovedSprite(sprites, Point.of(movedSprite), player)
+    : [];
+
+  console.log("----neighbors: ", playerNeighbors, spriteNeighbors, movedSprite);
+  const newAnimateQueue = [
+    ...animateQueue,
+    ...playerNeighbors,
+    ...spriteNeighbors,
+  ];
+  return newState.copy({
+    animateQueue: newAnimateQueue,
+    movedSprite: null,
+    oldPlayerPos: null,
+  });
 };
 
-function runAnimationQueue(setState, animateQueue) {
-  animateQueue.forEach((sprite) => {
-    if (sprite.isRock()) {
-      animateRock(setState, sprite);
-    }
-    if (sprite.isArrow()) {
-      animateArrow(setState, sprite);
-    }
-  });
+function getNeighborsOfMovedPlayer(sprites, oldPos) {
+  return sprites
+    .getCardinalNeighbors(oldPos)
+    .filter((s) => !Point.of(s).equals(oldPos) && s.isMobile);
 }
 
-async function loadAssets() {
-  const imagesToLoad = [
-    ["rock", "assets/rock.svg"],
-    ["arrow", "assets/arrow.svg"],
-    ["player", "assets/player.svg"],
-    ["cactus", "assets/bomb.svg"],
-    ["shrubbery", "assets/shrub.svg"],
-    ["wall", "assets/wallTexture.png"],
-    ["coin", "assets/coin.svg"],
-    ["exit", "assets/exit.svg"],
-    ["teleporter", "assets/teleporter.svg"],
-    ["teleportDestination", "assets/teleportDestination.svg"],
-  ];
-  const imgs = await Promise.all(
-    imagesToLoad.map(([k, src]) => {
-      const img = new Image();
-      img.src = src;
-      return new Promise((resolve) => {
-        img.onload = () => resolve({ [k]: img });
-      });
-    }),
-  );
-  return R.reduce((acc, img_1) => ({ ...acc, ...img_1 }), {}, imgs);
+function getNeighborsOfMovedSprite(sprites, oldPos, player) {
+  return sprites
+    .getAllNeighbors(oldPos)
+    .filter(
+      (s) =>
+        s.supportedBy && oldPos.equals(s.supportedBy) && !oldPos.equals(player),
+    );
 }
+// handleSpriteChange(oldPos) {
+//   this.setState((oldState) => {
+//     const player = oldState.player;
+//     console.log("oldPos, player: ", oldPos, player);
+//     console.log("old neighbors: ", oldState.sprites.getNeighbors(oldPos));
+//     const spritesToAnimate = oldState.sprites
+//       .getNeighbors(oldPos)
+//       .filter(
+//         (s) =>
+//           s.supportedBy &&
+//           oldPos.equals(s.supportedBy) &&
+//           !oldPos.equals(player),
+//       );
+//     console.log("spritesToAnimate", spritesToAnimate);
+//     return oldState.copy({
+//       animateQueue: oldState.animateQueue.concat(spritesToAnimate),
+//     });
+//   });
+// }
 
-function handleZoom(setState, direction) {
+const handleZoom = (setState, direction) => () => {
   setState((old) => {
     const zoom = old.zoom.add(direction);
     if (zoom.x <= 7 || zoom.y <= 5) {
@@ -217,14 +231,44 @@ function handleZoom(setState, direction) {
       projection: old.projection.zoomTo(zoom),
     });
   });
-}
+};
 
-function handleSpacebar(setState) {
+const handleSpacebar = (setState) => () => {
   setState((old) => {
     if (old.levelStart) {
       return old.copy({ levelStart: false });
     } else if (old.levelComplete && LEVELS.length > old.levelNumber + 1) {
       return GameState.initialize(old.levelNumber + 1, old.canvas, old.assets);
     }
+
+    return old;
   });
+};
+
+function handleNextAnimation(state) {
+  // if we are done animating one item and have more items to animate
+  if (state.animateQueue.length > 0) {
+    // this must be the ONLY setTimeout in the entire program
+    // otherwise we will have race conditions
+    // technically race conditions are still possible due to keyboard triggers...
+    setTimeout(
+      () => runAnimationQueue(state.setState, state.animateQueue),
+      fastTickInterval,
+    );
+  }
+}
+
+function runAnimationQueue(setState, animateQueue) {
+  console.log("runnning animation queue: ", animateQueue);
+  if (animateQueue.length === 0) {
+    return;
+  }
+
+  const sprite = animateQueue[0];
+  const actionTable = {
+    rock: animateRock,
+    leftArrow: animateArrow,
+    rightArrow: animateArrow,
+  };
+  actionTable[sprite.spriteType](setState, sprite);
 }

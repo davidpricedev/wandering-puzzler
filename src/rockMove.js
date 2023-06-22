@@ -24,11 +24,12 @@ export function handleRockCollision({
   const newRock = collidingSprite.moveTo(newRockPosition);
   const newSprites = sprites.move(collidingSprite, newRockPosition);
 
-  setTimeout(() => animateRock(setState, newRock), fastTickInterval);
-
   return oldState.copy({
     player: newPlayer,
     sprites: newSprites,
+    oldPlayerPos: Point.of(player),
+    movedSprite: collidingSprite,
+    animateQueue: [...oldState.animateQueue, newRock],
   });
 }
 
@@ -67,26 +68,34 @@ export function animateRock(setState, rock) {
     const { sprites, player, animateQueue, mapBounds } = oldState;
     const fallDirection = getFallDirection(rock, sprites);
     const queueWithoutRock = animateQueue.filter((s) => !s.equals(rock));
+
+    // if the rock can't fall anymore, remove it from the animate queue
     if (!fallDirection || !mapBounds.containsPoint(fallDirection.add(rock))) {
       return oldState.copy({
         animateQueue: queueWithoutRock,
       });
     }
 
+    if (rock.hasInitialSupport(sprites)) {
+      return oldState.copy({ animateQueue: queueWithoutRock });
+    }
+
     const newRockPos = Point.of(rock).add(fallDirection);
     const newRock = rock.moveTo(newRockPos);
     if (newRockPos.equals(player)) {
       return oldState.copy({
+        movedSprite: rock,
         animateQueue: queueWithoutRock,
         gameOver: true,
         gameOverReason: "You were bonked by a rock",
       });
     }
 
-    setTimeout(() => animateRock(setState, newRock), tickInterval);
+    console.log("rock moved from ", Point.of(rock), " to ", newRockPos);
     return oldState.copy({
+      movedSprite: rock,
       sprites: sprites.move(rock, newRockPos),
-      animateQueue: R.concat(queueWithoutRock, [newRock]),
+      animateQueue: R.concat([newRock], queueWithoutRock),
     });
   });
 }
