@@ -37,6 +37,7 @@ export async function runGame(canvas, scoreSpan, restartButton) {
       handleMovingViewport(state),
     )(state);
     console.log("state: ", state);
+    console.log("== key rock: ", state.sprites.getAt(Point.of(21, 1)));
     drawGame(state);
     scoreSpan.textContent = state.player.score;
     handleNextAnimation(state);

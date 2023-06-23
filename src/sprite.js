@@ -121,4 +121,7 @@ const attributesMap = {
   },
   leftArrow: { ...arrowAttributes, drawSprite: drawLeftArrowTile },
   rightArrow: { ...arrowAttributes, drawSprite: drawRightArrowTile },
+  exit: {
+    allowedFlows: [],
+  },
 };

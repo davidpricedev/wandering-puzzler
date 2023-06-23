@@ -64,6 +64,18 @@ function applySupportCheck(sprites) {
   });
 }
 
+function parseMapChar(x, y, char) {
+  const realChar = charAliases[char];
+  const spriteType = charToType[realChar || char];
+  if (!spriteType) {
+    return null;
+  }
+
+  return spriteType === "player"
+    ? Player.from(x, y)
+    : Sprite.fromType(x, y, spriteType);
+}
+
 export const motionTable = {
   rock: Point.down(),
   rightArrow: Point.right(),
@@ -82,19 +94,7 @@ function getSupportedBy(sprites, sprite) {
   }
 
   // Supported by a leaning wall, so need to check other directions too...
-  return supportSprite;
-}
-
-function parseMapChar(x, y, char) {
-  const realChar = charAliases[char];
-  const spriteType = charToType[realChar || char];
-  if (!spriteType) {
-    return null;
-  }
-
-  return spriteType === "player"
-    ? Player.from(x, y)
-    : Sprite.fromType(x, y, spriteType);
+  return getIndirectSupportedBy(sprites, sprite, supportSprite);
 }
 
 const getIndirectSupportedBy = (sprites, sprite, directSupport) => {
@@ -114,7 +114,7 @@ const getIndirectRockSupportedBy = (sprites, sprite, directSupport) => {
     if (rightSupport) {
       return rightSupport;
     } else {
-      return sprite.find((s) => Point.downRight().add(sprite).equals(s));
+      return sprites.find((s) => Point.downRight().add(sprite).equals(s));
     }
   }
 
@@ -123,7 +123,7 @@ const getIndirectRockSupportedBy = (sprites, sprite, directSupport) => {
     if (leftSupport) {
       return leftSupport;
     } else {
-      return sprite.find((s) => Point.downLeft().add(sprite).equals(s));
+      return sprites.find((s) => Point.downLeft().add(sprite).equals(s));
     }
   }
 };
