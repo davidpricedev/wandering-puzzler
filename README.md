@@ -60,12 +60,10 @@ Goals:
 Todos / Future Ideas:
 
 - add UI buttons instead of just keyboard controls for game start/restart, etc. (maybe even for movement?)
-- add level list drop-down to select level
-- implement an undo feature to roll back up to N moves
-- Add ability to use mouse/tap for movement in addition to arrow/wasd keys (mostly for mobile/tablet compatibility)
-- What about proper animations instead of turn-based updates?
-- Alternative graphics options (icon sets)?
+- Add ability to use mouse/tap for movement in addition to arrow keys (mostly for mobile/tablet compatibility)
+- add level list drop-down to select level (and figure out how to pull in levels from upstream repo)
 - sounds?
+- Deploy to github.io so it can be played online without installing it locally
 
 ## Technical aspects
 
@@ -78,8 +76,8 @@ Running:
 
 - install node
 - clone the repo
-- run `npm install`
-- run `npm start`
+- cd into the repository folder and run `npm install`
+- then run `npm start`
 
 ## Current issues
 
