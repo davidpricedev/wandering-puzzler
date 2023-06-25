@@ -28,15 +28,20 @@ export class Player extends Sprite {
 }
 
 function drawPlayer(ctx, projection, assets, sprite) {
-  const scalex = 0.65;
-  const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.strokeStyle = "white";
-  ctx.strokeRect(x, y, width, height);
+  const scalex = 1;
+  const {
+    x,
+    y,
+    width: cellW,
+    height: cellH,
+  } = projection.translateAndScale(sprite);
+  // ctx.strokeStyle = "white";
+  // ctx.strokeRect(x, y, width, height);
   ctx.drawImage(
     assets.player,
-    x + width * (0.5 - scalex / 2),
+    x + cellW * 0.5 * (1 - scalex), // adjust start to center the scaled image
     y,
-    width * scalex,
-    height,
+    cellW * scalex,
+    cellH,
   );
 }

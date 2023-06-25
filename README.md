@@ -80,3 +80,7 @@ Running:
 - then run `npm start`
 
 Or play it [online](https://davidpricedev.github.io/wandering-puzzler/)
+
+Building:
+
+- run `npm run build` which populates the docs folder with the built files which are served by github.io
