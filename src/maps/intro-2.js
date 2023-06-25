@@ -4,6 +4,6 @@ export const intro2 = String.raw`
 #*@ *:*: ** *#
 #   *::: ** X#
 ##############
-trample shrubbery to get more diamonds
+Trample shrubbery to get to more diamonds!
 1000
 `.trim();

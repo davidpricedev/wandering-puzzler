@@ -40,6 +40,6 @@ export const intro4 = String.raw`
 #:#######:#:###:#:###:#####:###:#####:#############:#:#:#:###
 #:::::::::#:::#:#:::::#:::::#:::::#:::::#:::::::::::#:::#:*X#
 #############################################################
-Maze with breadcrumbs (generated at www.dcode.fr)
+Maze with breadcrumbs! (generated at www.dcode.fr)
 1000
 `.trim();
