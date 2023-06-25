@@ -1,4 +1,4 @@
-import { runGame } from "./src/game";
+import { runGame } from "./game";
 
 function startGame() {
   const restartButton = document.querySelector("#restart");
