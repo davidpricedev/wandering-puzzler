@@ -78,3 +78,5 @@ Running:
 - clone the repo
 - cd into the repository folder and run `npm install`
 - then run `npm start`
+
+Or play it [online](https://davidpricedev.github.io/wandering-puzzler/)
