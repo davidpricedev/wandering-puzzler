@@ -7,7 +7,7 @@ import viteTsconfigPaths from "vite-tsconfig-paths";
 export default defineConfig({
   plugins: [svgrPlugin(), viteTsconfigPaths()],
   build: {
-    outDir: "dist",
+    outDir: "docs",
     rollupOptions: {},
   },
   server: { open: true },
