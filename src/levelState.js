@@ -7,9 +7,9 @@ import { Point, Box } from "./point";
 import { defaultZoom } from "./constants";
 import { Projection } from "./projection";
 
-export class GameState extends Data {
+export class LevelState extends Data {
+  setState = null;
   mapData = null;
-  player = null;
   sprites = null;
   canvas = null;
   ctx = null;
@@ -27,8 +27,10 @@ export class GameState extends Data {
   maxScore = 0;
   zoom = null;
   levelNumber = 0;
+  // oldPlayerPos = null;
+  movedSprites = [];
 
-  static initialize(levelNumber, canvas, assets) {
+  static initialize(setState, levelNumber, canvas, assets) {
     const { name: levelName, map: mapString } = LEVELS[levelNumber];
     const mapData = Map.parse(mapString);
     const {
@@ -37,23 +39,19 @@ export class GameState extends Data {
       maxScore,
       comment,
     } = mapData;
-    const [[player], spriteList] = R.partition(
-      (x) => x.spriteType === "player",
-      allSprites,
-    );
-    const sprites = SpriteCollection.fromSprites(spriteList);
+    const sprites = SpriteCollection.fromSprites(allSprites);
     const zoom = defaultZoom;
     const projection = Projection.buildOnCenter(
       canvas,
       mapBounds,
       zoom,
-      player,
+      sprites.getPlayer(),
     );
-    return GameState.create({
+    return LevelState.create({
+      setState,
       mapData,
       mapBounds,
       levelName,
-      player,
       sprites,
       canvas,
       ctx: canvas.getContext("2d"),

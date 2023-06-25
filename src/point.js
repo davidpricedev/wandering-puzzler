@@ -14,7 +14,7 @@ export class Point extends Data {
       return Point.create({ x: a.x, y: a.y });
     } else {
       console.error(`Invalid arguments to Point.of: `, a, b);
-      throw new Error(`Invalid arguments to Point.of: ${a}, ${b}`);
+      throw new Error(`Invalid argument(s) to Point.of: ${a}, ${b}`);
     }
   }
 

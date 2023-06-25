@@ -1,7 +1,7 @@
 import * as R from "ramda";
-import { defaultZoom, grassColor } from "./constants";
-import { Point, Box } from "./point";
-import { drawLine } from "./grid";
+import { defaultZoom, grassColor } from "../constants";
+import { Point, Box } from "../point";
+import { drawLine } from "./drawGrid";
 
 export const drawGrass = (ctx, projection) => {
   ctx.fillStyle = grassColor;

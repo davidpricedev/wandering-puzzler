@@ -3,7 +3,8 @@ import { Sprite } from "./sprite";
 import { Player } from "./player";
 import { charToType, charAliases } from "./constants";
 import { Data } from "dataclass";
-import { Box } from "./point";
+import { Box, Point } from "./point";
+import { getSupportedBy } from "./supportCheck";
 
 export class Map extends Data {
   sprites = [];
@@ -19,7 +20,7 @@ export class Map extends Data {
    */
   static parse(mapString) {
     const lines = mapString.trim().split("\n");
-    const sprites = extractSprites(lines.slice(0, lines.length - 2));
+    const sprites = extractSprites(lines);
     const height = lines.length - 2;
     const width = lines[0].length;
     const bounds = Box.create({
@@ -39,13 +40,30 @@ export class Map extends Data {
 }
 
 const extractSprites = R.pipe(
+  (lines) => lines.slice(0, lines.length - 2),
   (lines) =>
     lines.map((row, y) =>
       row.split("").map((char, x) => parseMapChar(x, y, char)),
     ),
   R.flatten,
   R.filter((x) => x !== null),
+  applySupportCheck,
 );
+
+// Probably a bit slow - currently O(n^2)
+// could index it or maybe use the raw map lines if needed
+function applySupportCheck(sprites) {
+  return sprites.map((sprite) => {
+    if (!sprite.isMobile) {
+      return sprite;
+    }
+
+    const supportSprite = getSupportedBy(sprites, sprite);
+    return supportSprite
+      ? sprite.copy({ supportedBy: Point.of(supportSprite) })
+      : sprite;
+  });
+}
 
 function parseMapChar(x, y, char) {
   const realChar = charAliases[char];

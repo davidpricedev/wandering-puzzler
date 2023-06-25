@@ -1,5 +1,5 @@
 import * as R from "ramda";
-import { gridColor } from "./constants";
+import { gridColor } from "../constants";
 
 export function drawGrid(ctx, projection) {
   const { cellW, cellH, canvasW, canvasH, mapViewport: mv } = projection;

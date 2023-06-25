@@ -1,6 +1,6 @@
 import * as R from "ramda";
-import { fastTickInterval, tickInterval } from "./constants";
 import { Point } from "./point";
+import { getSupportedBy } from "./supportCheck";
 
 export function handleArrowCollision({
   setState,
@@ -14,25 +14,28 @@ export function handleArrowCollision({
     return oldState;
   }
 
-  const { sprites, neighbors, player } = oldState;
+  const { sprites } = oldState;
   const newArrowPosition = Point.of(collidingSprite).add(command);
   if (sprites.getAt(newArrowPosition)) {
     // arrow can't move into a space occupied by another sprite
     return oldState;
   }
 
-  const newArrow = collidingSprite.moveTo(newArrowPosition);
-  const newSprites = sprites.move(collidingSprite, newArrowPosition);
-
-  setTimeout(() => animateArrow(setState, newArrow), fastTickInterval);
+  const newSprites = sprites
+    .move(collidingSprite, newArrowPosition)
+    .move(sprites.getPlayer(), newPlayer);
+  const newArrow = collidingSprite
+    .moveTo(newArrowPosition)
+    .setSupport(newSprites);
 
   return oldState.copy({
-    player: newPlayer,
-    sprites: newSprites,
+    sprites: newSprites.updateAt(newArrowPosition, newArrow),
+    movedSprites: [sprites.getPlayer(), collidingSprite],
+    animateQueue: [...oldState.animateQueue, newArrow],
   });
 }
 
-function getFlightDirection(sprite, sprites) {
+function getFlightDirection(sprites, sprite) {
   const direction =
     sprite.spriteType === "leftArrow" ? Point.left() : Point.right();
   const diagUp = direction.add(Point.up());
@@ -65,8 +68,8 @@ function getFlightDirection(sprite, sprites) {
 /** Once we've started a arrow moving it moves on its own until it can't move anymore */
 export function animateArrow(setState, arrow) {
   setState((oldState) => {
-    const { sprites, player, animateQueue, mapBounds } = oldState;
-    const flightDirection = getFlightDirection(arrow, sprites);
+    const { sprites, animateQueue, mapBounds } = oldState;
+    const flightDirection = getFlightDirection(sprites, arrow);
     const queueWithoutArrow = animateQueue.filter((s) => !s.equals(arrow));
     if (
       !flightDirection ||
@@ -74,23 +77,32 @@ export function animateArrow(setState, arrow) {
     ) {
       return oldState.copy({
         animateQueue: queueWithoutArrow,
+        sprites: sprites.updateAt(
+          arrow,
+          arrow.copy({ supportedBy: getSupportedBy(sprites, arrow) }),
+        ),
       });
+    }
+
+    if (arrow.hasSupport(sprites)) {
+      return oldState.copy({ animateQueue: queueWithoutArrow });
     }
 
     const newArrowPos = Point.of(arrow).add(flightDirection);
     const newArrow = arrow.moveTo(newArrowPos);
-    if (newArrowPos.equals(player)) {
+    if (newArrowPos.equals(sprites.getPlayer())) {
       return oldState.copy({
+        movedSprites: [arrow],
         animateQueue: queueWithoutArrow,
         gameOver: true,
         gameOverReason: "You were poked by a arrow",
       });
     }
 
-    setTimeout(() => animateArrow(setState, newArrow), tickInterval);
     return oldState.copy({
       sprites: sprites.move(arrow, newArrowPos),
-      animateQueue: R.concat(queueWithoutArrow, [newArrow]),
+      movedSprites: [arrow],
+      animateQueue: R.concat([newArrow], queueWithoutArrow),
     });
   });
 }

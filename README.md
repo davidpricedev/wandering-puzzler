@@ -56,13 +56,14 @@ Goals:
 - Should be able to support several different maps/levels
   - Start with simple text file for maps with particular characters for each item (i.e. `#` for wall,`>` or `<` for arrow, etc.)
   - Allow for arbitrarily large/small maps
-- Future expansions
-  - Add additional features later (there is a monster that moves towards the player, A teleporter that moves player back or forth from another position on the map, and probably other things)
-  - Add ability to use mouse/tap for movement in addition to arrow/wasd keys (mostly for mobile/tablet compatibility)
-  - Maybe make the grid-nature of the game less obvious?
-  - What about proper animations instead of turn-based updates?
-  - Alternative graphics options (icon sets)?
-  - sounds?
+
+Todos / Future Ideas:
+
+- add UI buttons instead of just keyboard controls for game start/restart, etc. (maybe even for movement?)
+- Add ability to use mouse/tap for movement in addition to arrow keys (mostly for mobile/tablet compatibility)
+- add level list drop-down to select level (and figure out how to pull in levels from upstream repo)
+- sounds?
+- Deploy to github.io so it can be played online without installing it locally
 
 ## Technical aspects
 
@@ -75,19 +76,5 @@ Running:
 
 - install node
 - clone the repo
-- run `npm install`
-- run `npm start`
-
-## Current issues
-
-- sliding diagonally shouldn't happen unless the arrow/rock is moving (if they start on a block they would otherwise slide off of, that diagonal slide shouldn't happen)
-- we don't consider the player when checking if a rock can fall, but we should - player should be able to support the rock unless it has momentum
-- in some cases we need to either trigger movement checks for diagonals too? If a rock is up a slope wall and can't roll down due to a shrub/diamond, it should fall after the player walks over the diamond/shrub
-  - I think I need to keep track of whether a rock/arrow is supported or not - and then check every turn to see if a "supported" rock/arrow is no longer supported. That might help with the sliding-off issue too - since a rock/arrow that is supported doesn't have momentum to slide off.
-- a moving rock should trigger rocks above it to move once it moves out of the way
-
-## TODO
-
-- add a try again button on gameover and handle clicks for it
-- add level list drop-down to select level
-- implement an undo feature to roll back up to N moves
+- cd into the repository folder and run `npm install`
+- then run `npm start`

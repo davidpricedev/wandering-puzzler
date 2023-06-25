@@ -1,41 +1,73 @@
 import * as R from "ramda";
 import { Data } from "dataclass";
-import { directionMap } from "./constants";
+import { allDirections, cardinalDirectionMap } from "./constants";
 import { Point } from "./point";
 
 export class SpriteCollection extends Data {
   sprites = [];
-  spriteIndex = {};
 
-  static fromSprites(sprites) {
+  static fromSprites(allSprites) {
+    const [[player], spriteList] = R.partition(
+      (s) => s.spriteType === "player",
+      allSprites,
+    );
     return SpriteCollection.create({
-      sprites,
-      spriteIndex: R.reduce(
-        (acc, sprite) => ({
-          ...acc,
-          [Point.of(sprite).toPairString()]: sprite,
-        }),
-        {},
-        sprites,
-      ),
+      sprites: [player, ...spriteList],
     });
   }
 
   getAt(pos) {
-    return this.spriteIndex[Point.of(pos).toPairString()];
+    return this.sprites.find((s) => Point.of(s).equals(pos));
+  }
+
+  updateAt(pos, newSprite) {
+    return this.copy({
+      sprites: this.sprites.map((s) => {
+        if (Point.of(s).equals(pos)) {
+          return newSprite;
+        }
+        return s;
+      }),
+    });
+  }
+
+  getPlayer() {
+    return this.sprites[0];
   }
 
   move(oldPos, newPos) {
-    const newSprite = this.getAt(oldPos).moveTo(newPos);
-    return SpriteCollection.fromSprites(
-      this.sprites.map((s) => (Point.of(s).equals(oldPos) ? newSprite : s)),
-    );
+    const oldSprite = this.getAt(oldPos);
+    if (!oldSprite) {
+      console.error("No sprite found at: ", oldPos);
+      throw new Error(`No sprite found at ${oldPos.toString()}`);
+    }
+
+    const newSprite = oldSprite.moveTo(newPos);
+    return this.copy({
+      sprites: this.sprites.map((s) =>
+        Point.of(s).equals(oldPos) ? newSprite : s,
+      ),
+    });
+  }
+
+  moveAndUpdate(oldPos, newSprite) {
+    const oldSprite = this.getAt(oldPos);
+    if (!oldSprite) {
+      console.error("No sprite found at: ", oldPos);
+      throw new Error(`No sprite found at ${oldPos.toString()}`);
+    }
+
+    return this.copy({
+      sprites: this.sprites.map((s) =>
+        Point.of(s).equals(oldPos) ? newSprite : s,
+      ),
+    });
   }
 
   removeAt(pos) {
-    return SpriteCollection.fromSprites(
-      this.sprites.filter((s) => !Point.of(s).equals(pos)),
-    );
+    return this.copy({
+      sprites: this.sprites.filter((s) => !Point.of(s).equals(pos)),
+    });
   }
 
   find(fn) {
@@ -46,15 +78,19 @@ export class SpriteCollection extends Data {
     this.sprites.forEach(fn);
   }
 
-  getNeighbors(pos) {
-    return Object.values(directionMap)
+  getCardinalNeighbors(pos) {
+    return Object.values(cardinalDirectionMap)
       .map((d) => this.getAt(Point.of(pos).add(d)))
       .filter(R.identity);
   }
 
+  getAllNeighbors(pos) {
+    return allDirections.map((d) => this.getAt(d.add(pos))).filter(R.identity);
+  }
+
   filterToViewport(viewport) {
-    return SpriteCollection.fromSprites(
-      this.sprites.filter((s) => viewport.containsPoint(s, true)),
-    );
+    return this.copy({
+      sprites: this.sprites.filter((s) => viewport.containsPoint(s, true)),
+    });
   }
 }
