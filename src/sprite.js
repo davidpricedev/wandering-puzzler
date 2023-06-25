@@ -10,6 +10,7 @@ import {
   drawLeftArrowTile,
   drawRightArrowTile,
 } from "./canvas";
+import { getSupportedBy } from "./supportCheck";
 
 export class Sprite extends Data {
   x = 0;
@@ -20,7 +21,6 @@ export class Sprite extends Data {
   canBeTrampled = false;
   char = "?";
   score = 0;
-  u;
   death = false;
   gameOverReason = "";
   isMobile = false;
@@ -66,10 +66,12 @@ export class Sprite extends Data {
     return ["leftArrow", "rightArrow"].includes(this.spriteType);
   }
 
-  hasInitialSupport(sprites) {
-    return (
-      !this.hasMoved && this.supportedBy && sprites.getAt(this.supportedBy)
-    );
+  hasSupport(sprites) {
+    return this.supportedBy && sprites.getAt(this.supportedBy);
+  }
+
+  setSupport(sprites) {
+    return this.copy({ supportedBy: getSupportedBy(sprites, this) });
   }
 }
 
@@ -80,7 +82,6 @@ const wallAttributes = {
   drawSprite: drawLeaningWallTile,
 };
 const arrowAttributes = {
-  color: "pink",
   isMobile: true,
   allowedFlows: [],
 };
@@ -99,24 +100,20 @@ const attributesMap = {
     allowedFlows: [Point.upRight(), Point.downLeft()],
   },
   shrubbery: {
-    color: "green",
     canBeTrampled: true,
     score: 0,
     allowedFlows: [],
   },
   cactus: {
-    color: "orange",
     death: true,
     gameOverReason: "You got too close to a bomb!",
     allowedFlows: [],
   },
   coin: {
-    color: "yellow",
     canBeTrampled: true,
     score: 10,
   },
   rock: {
-    color: "brown",
     isMobile: true,
   },
   leftArrow: { ...arrowAttributes, drawSprite: drawLeftArrowTile },

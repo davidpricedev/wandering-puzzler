@@ -4,6 +4,7 @@ import { Player } from "./player";
 import { charToType, charAliases } from "./constants";
 import { Data } from "dataclass";
 import { Box, Point } from "./point";
+import { getSupportedBy } from "./supportCheck";
 
 export class Map extends Data {
   sprites = [];
@@ -75,55 +76,3 @@ function parseMapChar(x, y, char) {
     ? Player.from(x, y)
     : Sprite.fromType(x, y, spriteType);
 }
-
-export const motionTable = {
-  rock: Point.down(),
-  rightArrow: Point.right(),
-  leftArrow: Point.left(),
-};
-
-function getSupportedBy(sprites, sprite) {
-  const supportPos = motionTable[sprite.spriteType].add(sprite);
-  const supportSprite = sprites.find((s) => supportPos.equals(s));
-  // Easy case, we are supported directly
-  if (
-    !supportSprite ||
-    !["leftLeanWall", "rightLeanWall"].includes(supportSprite.spriteType)
-  ) {
-    return supportSprite;
-  }
-
-  // Supported by a leaning wall, so need to check other directions too...
-  return getIndirectSupportedBy(sprites, sprite, supportSprite);
-}
-
-const getIndirectSupportedBy = (sprites, sprite, directSupport) => {
-  if (sprite.spriteType !== "rock") {
-    // deal with arrows later
-    return directSupport;
-  }
-
-  return getIndirectRockSupportedBy(sprites, sprite, directSupport);
-};
-
-const getIndirectRockSupportedBy = (sprites, sprite, directSupport) => {
-  if (directSupport.spriteType === "leftLeanWall") {
-    const rightSupport = sprites.find((s) =>
-      Point.right().add(sprite).equals(s),
-    );
-    if (rightSupport) {
-      return rightSupport;
-    } else {
-      return sprites.find((s) => Point.downRight().add(sprite).equals(s));
-    }
-  }
-
-  if (directSupport.spriteType === "rightLeanWall") {
-    const leftSupport = sprites.find((s) => Point.left().add(sprite).equals(s));
-    if (leftSupport) {
-      return leftSupport;
-    } else {
-      return sprites.find((s) => Point.downLeft().add(sprite).equals(s));
-    }
-  }
-};

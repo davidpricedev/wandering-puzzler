@@ -1,5 +1,5 @@
 import * as R from "ramda";
-import { drawGrid, drawCenterLine } from "./canvas/drawGrid.js";
+import { drawGrid, drawCenterLine } from "./canvas/drawGrid";
 import {
   drawGrass,
   drawGameOver,
@@ -10,19 +10,20 @@ import {
   drawLevelStart,
   loadAssets,
 } from "./canvas";
-import { handleKeys, keyboardSetup, subscribe } from "./keyboard.js";
+import { handleKeys, keyboardSetup, subscribe } from "./keyboard";
 import {
   cardinalDirectionMap,
   fastTickInterval,
   tickInterval,
   zoomChange,
-} from "./constants.js";
-import { GameState } from "./gameState.js";
-import { movePlayer } from "./playerMove.js";
-import { Box, Point } from "./point.js";
-import { animateArrow } from "./arrowMove.js";
-import { animateRock } from "./rockMove.js";
-import { LEVELS } from "./maps/index.js";
+} from "./constants";
+import { LevelState } from "./levelState";
+import { movePlayer } from "./playerMove";
+import { Box, Point } from "./point";
+import { animateArrow } from "./arrowMove";
+import { animateRock } from "./rockMove";
+import { LEVELS } from "./maps/index";
+import { inspect } from "./util";
 
 export async function runGame(canvas, scoreSpan, restartButton) {
   const assets = await loadAssets();
@@ -37,13 +38,22 @@ export async function runGame(canvas, scoreSpan, restartButton) {
       handleMovingViewport(state),
     )(state);
     console.log("state: ", state);
-    console.log("== key rock: ", state.sprites.getAt(Point.of(21, 1)));
+    //const keyRock = state.sprites.getAt(Point.of(21, 1));
+    const keyRock = state.sprites.getAt(Point.of(20, 2));
+    if (keyRock) {
+      console.log("== key rock: ", keyRock);
+      console.log(
+        "== key rock support: ",
+        keyRock.supportedBy,
+        keyRock.supportedBy && state.sprites.getAt(keyRock.supportedBy),
+      );
+    }
     drawGame(state);
-    scoreSpan.textContent = state.player.score;
+    scoreSpan.textContent = state.sprites.getPlayer().score;
     handleNextAnimation(state);
   };
 
-  state = GameState.initialize(setState, 7, canvas, assets);
+  state = LevelState.initialize(setState, 7, canvas, assets);
 
   keyboardSetup();
   drawGame(state);
@@ -52,7 +62,6 @@ export async function runGame(canvas, scoreSpan, restartButton) {
 }
 
 function drawGame({
-  player,
   sprites,
   canvas,
   ctx,
@@ -66,6 +75,7 @@ function drawGame({
   assets,
   animateQueue,
 }) {
+  const player = sprites.getPlayer();
   ctx.reset();
   drawGrass(ctx, projection);
   drawGrid(ctx, projection);
@@ -73,7 +83,6 @@ function drawGame({
     .filterToViewport(projection.mapViewport)
     .forEach((s) => s.draw(ctx, projection, assets));
   // drawCanvasViewport(ctx, projection.canvasViewport);
-  player.draw(ctx, projection, assets);
   // drawCenterLine(ctx, projection);
   if (animateQueue.length > 0) {
     drawBusy(ctx, canvas);
@@ -100,7 +109,7 @@ function drawGame({
 
 const restartGame = (setState) => () => {
   setState((old) =>
-    GameState.initialize(setState, old.levelNumber, old.canvas, old.assets),
+    LevelState.initialize(setState, old.levelNumber, old.canvas, old.assets),
   );
 };
 
@@ -135,16 +144,17 @@ const handleMovement = (setState) => (type, commandType) => {
  * prevent player from walking off the map
  */
 const handleMapEdge = (oldState) => (newState) => {
-  const { player, mapBounds } = newState;
-  console.log("handleMapEdge: ", mapBounds.containsPoint(player));
-  return mapBounds.containsPoint(player) ? newState : oldState;
+  const { sprites, mapBounds } = newState;
+  console.log("handleMapEdge: ", mapBounds.containsPoint(sprites.getPlayer()));
+  return mapBounds.containsPoint(sprites.getPlayer()) ? newState : oldState;
 };
 
 /**
  * recenter the map viewport on the player when the player is near the edge
  */
 const handleMovingViewport = (oldState) => (newState) => {
-  const { player, projection } = newState;
+  const { sprites, projection } = newState;
+  const player = sprites.getPlayer();
   const mv = projection.mapViewport;
   if (
     player.x - mv.left < 1 ||
@@ -164,61 +174,70 @@ const handleMovingViewport = (oldState) => (newState) => {
  * Animate each of the 3 cardinal directions we were adjacent to previously
  */
 const handleProximityChecks = (oldState) => (newState) => {
-  const { sprites, oldPlayerPos, movedSprite, animateQueue, player } = newState;
-  const playerNeighbors = oldPlayerPos
-    ? getNeighborsOfMovedPlayer(sprites, Point.of(oldPlayerPos))
-    : [];
+  const { sprites, movedSprites, animateQueue } = newState;
+  const spriteNeighbors = movedSprites.flatMap((sprite) =>
+    sprite.spriteType === "player"
+      ? getNeighborsOfMovedPlayer(sprites, sprite).concat(
+          getNeighborsOfMovedSprite(sprites, sprite),
+        )
+      : getNeighborsOfMovedSprite(sprites, sprite),
+  );
 
-  const spriteNeighbors = movedSprite
-    ? getNeighborsOfMovedSprite(sprites, Point.of(movedSprite), player)
-    : [];
-
-  console.log("----neighbors: ", playerNeighbors, spriteNeighbors, movedSprite);
-  const newAnimateQueue = [
-    ...animateQueue,
-    ...playerNeighbors,
-    ...spriteNeighbors,
-  ];
+  console.log("----neighbors: ", spriteNeighbors, movedSprites);
+  if (movedSprites && movedSprites.length > 0) {
+    console.log(
+      "----neighbors: ",
+      getNeighborsOfMovedPlayer(sprites, movedSprites[0]),
+      getNeighborsOfMovedSprite(sprites, movedSprites[0]),
+    );
+  }
+  const newAnimateQueue = [...animateQueue, ...spriteNeighbors];
   return newState.copy({
     animateQueue: newAnimateQueue,
-    movedSprite: null,
-    oldPlayerPos: null,
+    movedSprites: [],
   });
 };
 
-function getNeighborsOfMovedPlayer(sprites, oldPos) {
+/**
+ * player walking by an unsupported mobile sprite will jostle it - triggering it to move
+ * strip off the support for moving sprites
+ */
+function getNeighborsOfMovedPlayer(sprites, oldPlayerPos) {
   return sprites
-    .getCardinalNeighbors(oldPos)
-    .filter((s) => !Point.of(s).equals(oldPos) && s.isMobile);
+    .getCardinalNeighbors(oldPlayerPos)
+    .filter(isTriggeredByPlayerProximity(sprites))
+    .map(
+      inspect(`player-neighbors (${Point.of(oldPlayerPos).toPairString()}))`),
+    )
+    .map((s) => s.copy({ supportedBy: null }));
 }
 
-function getNeighborsOfMovedSprite(sprites, oldPos, player) {
+/**
+ * a change in sprite might remove support from another sprite - triggering it to move
+ * strip off the support for moving sprites
+ */
+function getNeighborsOfMovedSprite(sprites, oldPos) {
   return sprites
     .getAllNeighbors(oldPos)
-    .filter(
-      (s) =>
-        s.supportedBy && oldPos.equals(s.supportedBy) && !oldPos.equals(player),
-    );
+    .filter(isTriggeredBySpriteChange(sprites, oldPos))
+    .map(inspect("sprite-neighbors"))
+    .map((s) => s.copy({ supportedBy: null }));
 }
-// handleSpriteChange(oldPos) {
-//   this.setState((oldState) => {
-//     const player = oldState.player;
-//     console.log("oldPos, player: ", oldPos, player);
-//     console.log("old neighbors: ", oldState.sprites.getNeighbors(oldPos));
-//     const spritesToAnimate = oldState.sprites
-//       .getNeighbors(oldPos)
-//       .filter(
-//         (s) =>
-//           s.supportedBy &&
-//           oldPos.equals(s.supportedBy) &&
-//           !oldPos.equals(player),
-//       );
-//     console.log("spritesToAnimate", spritesToAnimate);
-//     return oldState.copy({
-//       animateQueue: oldState.animateQueue.concat(spritesToAnimate),
-//     });
-//   });
-// }
+
+const isTriggeredByPlayerProximity = (sprites) => (sprite) => {
+  // filter out player themselves and non-mobile sprites
+  if (!sprite.isMobile || sprite.spriteType === "player") {
+    return false;
+  }
+
+  // true if sprite is not supported by anything or if support no longer exists
+  return !sprite.supportedBy || !sprites.getAt(sprite.supportedBy);
+};
+
+const isTriggeredBySpriteChange = (sprites, oldPos) => (sprite) =>
+  sprite.supportedBy &&
+  Point.of(oldPos).equals(sprite.supportedBy) &&
+  !sprites.getAt(oldPos);
 
 const handleZoom = (setState, direction) => () => {
   setState((old) => {
@@ -239,7 +258,7 @@ const handleSpacebar = (setState) => () => {
     if (old.levelStart) {
       return old.copy({ levelStart: false });
     } else if (old.levelComplete && LEVELS.length > old.levelNumber + 1) {
-      return GameState.initialize(old.levelNumber + 1, old.canvas, old.assets);
+      return LevelState.initialize(old.levelNumber + 1, old.canvas, old.assets);
     }
 
     return old;

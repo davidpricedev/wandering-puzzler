@@ -1,10 +1,11 @@
 import * as R from "ramda";
-import { handleRockCollision, animateRock } from "./rockMove.js";
-import { Point } from "./point.js";
-import { animateArrow, handleArrowCollision } from "./arrowMove.js";
+import { handleRockCollision } from "./rockMove";
+import { Point } from "./point";
+import { handleArrowCollision } from "./arrowMove";
 
 export function movePlayer(oldState, setState, command) {
-  const { player, sprites, gameOver, animateQueue, mapBounds } = oldState;
+  const { sprites, gameOver, animateQueue, mapBounds } = oldState;
+  const player = sprites.getPlayer();
   if (gameOver || animateQueue.length > 0) {
     return oldState;
   }
@@ -17,9 +18,9 @@ export function movePlayer(oldState, setState, command) {
   const collidingSprite = sprites.getAt(newPlayer);
   if (collidingSprite && collidingSprite.spriteType === "exit") {
     return oldState.copy({
-      player: newPlayer,
       levelComplete: true,
-      oldPlayerPos: Point.of(player),
+      movedSprites: [player],
+      sprites: sprites.move(player, newPlayer),
     });
   }
 
@@ -28,9 +29,9 @@ export function movePlayer(oldState, setState, command) {
       (a) => a.spriteType === "teleportDestination",
     );
     return oldState.copy({
-      player: player.moveTo(teleportDest),
       projection: oldState.projection.recenter(teleportDest),
-      oldPlayerPos: Point.of(player),
+      movedSprites: [player],
+      sprites: sprites.move(player, teleportDest),
     });
   }
 
@@ -40,20 +41,19 @@ export function movePlayer(oldState, setState, command) {
 
   if (collidingSprite && collidingSprite.canBeTrampled) {
     return oldState.copy({
-      sprites: sprites.removeAt(newPlayer),
-      player: newPlayer.addScore(collidingSprite.score),
-      oldPlayerPos: Point.of(player),
-      movedSprite: collidingSprite,
+      sprites: sprites
+        .removeAt(newPlayer)
+        .moveAndUpdate(player, newPlayer.addScore(collidingSprite.score)),
+      movedSprites: [player, collidingSprite],
     });
   }
 
   if (collidingSprite && collidingSprite.death) {
     return oldState.copy({
-      player: newPlayer,
-      oldPlayerPos: Point.of(player),
-      movedSprite: collidingSprite,
+      movedSprites: [player, collidingSprite],
       gameOver: true,
       gameOverReason: collidingSprite.gameOverReason,
+      sprites: sprites.move(player, newPlayer),
     });
   }
 
@@ -79,7 +79,7 @@ export function movePlayer(oldState, setState, command) {
 
   // walk into empty space
   return oldState.copy({
-    player: newPlayer,
-    oldPlayerPos: Point.of(player),
+    movedSprites: [player],
+    sprites: sprites.move(player, newPlayer),
   });
 }
