@@ -98,7 +98,6 @@ export function animateRock(setState, rock) {
       });
     }
 
-    console.log("rock moved from ", Point.of(rock), " to ", newRockPos);
     return oldState.copy({
       movedSprites: [rock],
       sprites: sprites.move(rock, newRockPos),

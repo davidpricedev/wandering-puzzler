@@ -4,7 +4,6 @@ import {
   drawGrass,
   drawGameOver,
   drawBusy,
-  // drawCanvasViewport,
   drawMapEdge,
   drawLevelComplete,
   drawLevelStart,
@@ -23,7 +22,6 @@ import { Box, Point } from "./point";
 import { animateArrow } from "./arrowMove";
 import { animateRock } from "./rockMove";
 import { LEVELS } from "./maps/index";
-import { inspect } from "./util";
 
 export async function runGame(canvas, scoreSpan, restartButton) {
   const assets = await loadAssets();
@@ -37,17 +35,6 @@ export async function runGame(canvas, scoreSpan, restartButton) {
       handleMapEdge(state),
       handleMovingViewport(state),
     )(state);
-    console.log("state: ", state);
-    //const keyRock = state.sprites.getAt(Point.of(21, 1));
-    const keyRock = state.sprites.getAt(Point.of(20, 2));
-    if (keyRock) {
-      console.log("== key rock: ", keyRock);
-      console.log(
-        "== key rock support: ",
-        keyRock.supportedBy,
-        keyRock.supportedBy && state.sprites.getAt(keyRock.supportedBy),
-      );
-    }
     drawGame(state);
     scoreSpan.textContent = state.sprites.getPlayer().score;
     handleNextAnimation(state);
@@ -145,7 +132,6 @@ const handleMovement = (setState) => (type, commandType) => {
  */
 const handleMapEdge = (oldState) => (newState) => {
   const { sprites, mapBounds } = newState;
-  console.log("handleMapEdge: ", mapBounds.containsPoint(sprites.getPlayer()));
   return mapBounds.containsPoint(sprites.getPlayer()) ? newState : oldState;
 };
 
@@ -183,14 +169,6 @@ const handleProximityChecks = (oldState) => (newState) => {
       : getNeighborsOfMovedSprite(sprites, sprite),
   );
 
-  console.log("----neighbors: ", spriteNeighbors, movedSprites);
-  if (movedSprites && movedSprites.length > 0) {
-    console.log(
-      "----neighbors: ",
-      getNeighborsOfMovedPlayer(sprites, movedSprites[0]),
-      getNeighborsOfMovedSprite(sprites, movedSprites[0]),
-    );
-  }
   const newAnimateQueue = [...animateQueue, ...spriteNeighbors];
   return newState.copy({
     animateQueue: newAnimateQueue,
@@ -206,9 +184,6 @@ function getNeighborsOfMovedPlayer(sprites, oldPlayerPos) {
   return sprites
     .getCardinalNeighbors(oldPlayerPos)
     .filter(isTriggeredByPlayerProximity(sprites))
-    .map(
-      inspect(`player-neighbors (${Point.of(oldPlayerPos).toPairString()}))`),
-    )
     .map((s) => s.copy({ supportedBy: null }));
 }
 
@@ -220,7 +195,6 @@ function getNeighborsOfMovedSprite(sprites, oldPos) {
   return sprites
     .getAllNeighbors(oldPos)
     .filter(isTriggeredBySpriteChange(sprites, oldPos))
-    .map(inspect("sprite-neighbors"))
     .map((s) => s.copy({ supportedBy: null }));
 }
 
@@ -279,7 +253,6 @@ function handleNextAnimation(state) {
 }
 
 function runAnimationQueue(setState, animateQueue) {
-  console.log("runnning animation queue: ", animateQueue);
   if (animateQueue.length === 0) {
     return;
   }
