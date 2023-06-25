@@ -14,7 +14,7 @@ body {
   border-bottom: #999 4px solid;
   border-right: #999 4px solid;
   background-color: #593d06;
-  background-image: url(binding-light.png);
+  background-image: url(./binding-light.png);
 }
 
 canvas {
