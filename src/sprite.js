@@ -66,6 +66,10 @@ export class Sprite extends Data {
     return ["leftArrow", "rightArrow"].includes(this.spriteType);
   }
 
+  isPlayer() {
+    return this.spriteType === "player";
+  }
+
   hasSupport(sprites) {
     return this.supportedBy && sprites.getAt(this.supportedBy);
   }

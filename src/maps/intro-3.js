@@ -1,9 +1,8 @@
 export const intro3 = String.raw`
 ##############
-#*  **** **###
-#*@ *:*: **#A#
-#* T**** **#X#
+#     :   T#*#
+# @  :*:  ##AX
 ##############
-use the teleporter to get to the exit
+Use the teleporter to get to the exit!
 1000
 `.trim();

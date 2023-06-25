@@ -42,20 +42,22 @@ function getFlightDirection(sprites, sprite) {
   const diagDown = direction.add(Point.down());
 
   const directionSprite = sprites.getAt(direction.add(sprite));
-  if (!directionSprite) {
+  if (!directionSprite || directionSprite.isPlayer()) {
     return direction;
   }
 
+  const diagUpSprite = sprites.getAt(diagUp.add(sprite));
   if (
-    !sprites.getAt(diagUp.add(sprite)) &&
+    (!diagUpSprite || diagUpSprite.isPlayer()) &&
     !sprites.getAt(Point.up().add(sprite)) &&
     Point.arrayInclues(diagUp, directionSprite.allowedFlows)
   ) {
     return diagUp;
   }
 
+  const diagDownSprite = sprites.getAt(diagDown.add(sprite));
   if (
-    !sprites.getAt(diagDown.add(sprite)) &&
+    (!diagDownSprite || diagDownSprite.isPlayer()) &&
     !sprites.getAt(Point.down().add(sprite)) &&
     Point.arrayInclues(diagDown, directionSprite.allowedFlows)
   ) {

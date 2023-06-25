@@ -1,8 +1,7 @@
 export const intro7 = String.raw`
 ##############
 #*  *<>: ** ##
-#*@ *:*: ** *#
-#*  *::: ** X#
+#*@ *:*: ** *X
 ##############
 Watch out for flying arrows!
 1000

@@ -31,6 +31,8 @@ export class LevelState extends Data {
   movedSprites = [];
 
   static initialize(setState, levelNumber, canvas, assets) {
+    console.log("Levels: ", LEVELS);
+    console.log("Level Number: ", levelNumber);
     const { name: levelName, map: mapString } = LEVELS[levelNumber];
     const mapData = Map.parse(mapString);
     const {
