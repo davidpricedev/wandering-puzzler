@@ -1,8 +1,8 @@
 # Wandering Puzzler
 
-Inspired by an old puzzle game from 1988 called Wanderer which was available on Amiga.
+This game is a clone of an old puzzle game from 1988 called Wanderer which was available on Amiga.
 I believe [this](https://github.com/sshipway/wanderer) is the source code for that game?
-Apparently Wanderer was a clone of sorts of an older game called Boulder Dash
+Apparently Wanderer was/is an expansion on the concepts of an older game named Boulder Dash.
 
 This game is my first attempt to work with html canvas and my first attempt at any sort of game.
 
