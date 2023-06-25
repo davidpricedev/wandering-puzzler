@@ -36,7 +36,7 @@ export function handleRockCollision({
   });
 }
 
-function getFallDirection(sprites, sprite) {
+export function getFallDirection(sprites, sprite) {
   const down = Point.of(0, 1);
   const downleft = Point.of(-1, 1);
   const downright = Point.of(1, 1);
