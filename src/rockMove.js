@@ -42,20 +42,22 @@ function getFallDirection(sprites, sprite) {
   const downright = Point.of(1, 1);
 
   const downSprite = sprites.getAt(down.add(sprite));
-  if (!downSprite) {
+  if (!downSprite || downSprite.isPlayer()) {
     return down;
   }
 
+  const downLeftSprite = sprites.getAt(downleft.add(sprite));
   if (
-    !sprites.getAt(downleft.add(sprite)) &&
+    (!downLeftSprite || downLeftSprite.isPlayer()) &&
     !sprites.getAt(Point.left().add(sprite)) &&
     Point.arrayInclues(downleft, downSprite.allowedFlows)
   ) {
     return downleft;
   }
 
+  const downRightSprite = sprites.getAt(downright.add(sprite));
   if (
-    !sprites.getAt(downright.add(sprite)) &&
+    (!downRightSprite || downRightSprite.isPlayer()) &&
     !sprites.getAt(Point.right().add(sprite)) &&
     Point.arrayInclues(downright, downSprite.allowedFlows)
   ) {

@@ -40,7 +40,7 @@ export async function runGame(canvas, scoreSpan, restartButton) {
     handleNextAnimation(state);
   };
 
-  state = LevelState.initialize(setState, 0, canvas, assets);
+  state = LevelState.initialize(setState, 7, canvas, assets);
 
   keyboardSetup();
   drawGame(state);
