@@ -232,7 +232,12 @@ const handleSpacebar = (setState) => () => {
     if (old.levelStart) {
       return old.copy({ levelStart: false });
     } else if (old.levelComplete && LEVELS.length > old.levelNumber + 1) {
-      return LevelState.initialize(old.levelNumber + 1, old.canvas, old.assets);
+      return LevelState.initialize(
+        setState,
+        old.levelNumber + 1,
+        old.canvas,
+        old.assets,
+      );
     }
 
     return old;
