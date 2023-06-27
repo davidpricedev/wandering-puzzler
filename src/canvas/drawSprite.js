@@ -23,19 +23,14 @@ export function drawWallTile(ctx, projection, assets, sprite) {
 
 /** scale the svg to only take up 1/3 of the vertical space */
 export function drawLeftArrowTile(ctx, projection, assets, sprite) {
-  const scaley = 1 / 3;
+  const scaley = 1;
   const { x, y, width, height } = projection.translateAndScale(sprite);
-  ctx.drawImage(
-    assets.arrow,
-    x,
-    y + height * (0.5 - scaley / 2),
-    width,
-    height * scaley,
-  );
+  ctx.drawImage(assets.arrow, x, y, width, height * scaley);
 }
 
 /** scale the svg to only take up 1/3 of the vertical space, mirror the arrow around the y axis */
 export function drawRightArrowTile(ctx, projection, assets, sprite) {
+  const scaley = 1;
   const { x, y, width, height } = projection.translateAndScale(sprite);
   ctx.save();
   ctx.scale(-1, 1);
@@ -44,9 +39,9 @@ export function drawRightArrowTile(ctx, projection, assets, sprite) {
     assets.arrow,
     // 0, 0, assets.arrow.width, assets.arrow.height,
     -x - width,
-    y + height / 3,
+    y,
     width,
-    height / 3,
+    height * scaley,
   );
   ctx.restore();
 }
